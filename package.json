@@ -9,6 +9,8 @@
   "author": "Satwinder Singh",
   "license": "ISC",
   "dependencies": {
+    "alchemy-sdk": "^2.3.0",
+    "big-number": "^2.0.0",
     "dotenv": "^16.0.3",
     "request": "^2.88.2"
   }
