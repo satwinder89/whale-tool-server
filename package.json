@@ -12,6 +12,8 @@
     "alchemy-sdk": "^2.3.0",
     "big-number": "^2.0.0",
     "dotenv": "^16.0.3",
+    "mongodb": "^4.13.0",
+    "mongoose": "^6.8.4",
     "request": "^2.88.2"
   }
 }
