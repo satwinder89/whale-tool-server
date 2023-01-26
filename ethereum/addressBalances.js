@@ -1,5 +1,6 @@
 // Setup: npm install alchemy-sdk
 const { Alchemy, Network } = require('alchemy-sdk')
+
 require('dotenv').config()
 const util = require('util')
 const fs = require('fs')
@@ -7,6 +8,8 @@ const filePath = './whales.txt'
 const readFile = util.promisify(fs.readFile)
 const mongoose = require('mongoose')
 const walletsModel = require('../database/models/wallets')
+const ethers = require('ethers')
+const { start } = require('repl')
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -184,6 +187,86 @@ self.updateWallet = async function () {
       )
     }
     return true
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.test = async function () {
+  try {
+    let wallets = await walletsModel.find().lean()
+    for (let i = 0; i < wallets.length; i++) {
+      let startTime = Date.now()
+      const currentBlock = await alchemy.core.getBlockNumber()
+      const tenBlocksAgo = currentBlock - 2000
+      const sendedTx = await alchemy.core.getAssetTransfers({
+        fromBlock: ethers.utils.hexlify(tenBlocksAgo),
+        fromAddress: wallets[i].address,
+        category: ['erc20', 'internal', 'external'],
+        withMetadata: true
+      })
+      const recevedTx = await alchemy.core.getAssetTransfers({
+        fromBlock: ethers.utils.hexlify(tenBlocksAgo),
+        toAddress: wallets[i].address,
+        category: ['erc20', 'internal', 'external'],
+        withMetadata: true
+      })
+      let test2 = []
+      if (recevedTx.transfers.length != 0) {
+        for (let j = 0; j < recevedTx.transfers.length; j++) {
+          let metadata
+          if(recevedTx.transfers[j].rawContract.address != null){
+            metadata = await alchemy.core.getTokenMetadata(
+              recevedTx.transfers[j].rawContract.address,
+            )
+            test2.push(metadata)
+            let balance = recevedTx.transfers[j].rawContract.value / Math.pow(10, metadata.decimals)
+            recevedTx.transfers[j].value = balance.toFixed(10)
+            recevedTx.transfers[j].asset = metadata.name
+            console.log()
+          }
+        }
+        console.log('done')
+      }
+      let endTime = Date.now()
+      console.log(endTime - startTime)
+    }
+    // 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B : Universal Router Uniswap
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.test1 = async function () {
+  try {
+    //start block
+    const currentBlock = await alchemy.core.getBlockNumber()
+    const data = await alchemy.core.getAssetTransfers({
+      fromBlock: 14625985,
+      fromAddress: '0x3e606be732d16d386Ef1873598D95d664Deb7DFD',
+      category: ['internal'],
+    })
+    let test2 = []
+    const ownedToken = await alchemy.core.getTokenBalances(
+      '0x088b2777282dcdee86e2832e7b4df49b77c0519f',
+      ['0x3e606be732d16d386Ef1873598D95d664Deb7DFD'],
+    )
+    let balance = ownedToken.tokenBalances[0].tokenBalance
+    // Get metadata of token
+    const metadata = await alchemy.core.getTokenMetadata(
+      '0x3e606be732d16d386Ef1873598D95d664Deb7DFD',
+    )
+    // Compute token balance in human-readable format
+    balance = balance / Math.pow(10, metadata.decimals)
+    balance = balance.toFixed(10)
+    let ownerTokenBalance= {
+      address: '0x088b2777282dcdee86e2832e7b4df49b77c0519f',
+      balance: balance,
+      metadata: metadata
+    }
+
+
+    console.log('test')
   } catch (e) {
     console.log(e)
   }
