@@ -8,7 +8,8 @@ const runMain = async () => {
     await database.connectDB();
     // let test0 = await addressBalances.updateWallet()
     // let test = await addressBalances.accountToken()
-    let test = await addressBalances.test()
+    let test = await addressBalances.getWhalesTransactions()
+    // let test = await addressBalances.setBlockchain()
     console.log(test)
   } catch (error) {
     console.log(error)
