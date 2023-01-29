@@ -1,6 +1,8 @@
 require('dotenv').config()
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
 const database = require("./database/connectDB")
-
 const scheduler = require("./crons/scheduler")
 
 const runMain = async () => {
@@ -13,5 +15,9 @@ const runMain = async () => {
     process.exit(1)
   }
 }
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
 
 runMain()
