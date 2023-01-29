@@ -133,7 +133,7 @@ self.createAllWallets = async function () {
     let arrayOfAddress = []
     for (var i = 0; i < address.length; i++) {
       let newAddress = {
-        name: 'WHALE#' + i,
+        name: 'WHALE #' + i,
         address: address[i],
         insertDate: Date.now(),
         updateDate: Date.now(),

@@ -81,10 +81,10 @@ self.updateWallet = async function () {
 
 self.getWhalesTransactions = async function () {
   try {
+    let startTime = Date.now()
     let wallets = await walletsModel.find().lean()
     let result = []
-    let startTime = Date.now()
-    let blockchain = await blockchainsModel.findOne({ name: "Ethereum" }).lean()
+    let blockchain = await blockchainsModel.findOne({ name: 'Ethereum' }).lean()
     const currentBlock = await alchemy.core.getBlockNumber()
     for (let i = 0; i < wallets.length; i++) {
       try {
@@ -117,12 +117,15 @@ self.getWhalesTransactions = async function () {
                   sendedTx.transfers[j].asset = metadata.name
                   sendedTxResult.push({
                     type: 'sended',
+                    address: sendedTx.transfers[j].rawContract.address,
                     hash: sendedTx.transfers[j].hash,
                     from: sendedTx.transfers[j].from,
                     to: sendedTx.transfers[j].to,
                     asset: sendedTx.transfers[j].asset,
                     value: sendedTx.transfers[j].value,
-                    date: new Date(sendedTx.transfers[j].metadata.blockTimestamp).getTime()
+                    date: new Date(
+                      sendedTx.transfers[j].metadata.blockTimestamp,
+                    ).getTime(),
                   })
                 }
               } catch (e) {
@@ -130,17 +133,22 @@ self.getWhalesTransactions = async function () {
                 continue
               }
             }
+            if (!sendedTx.transfers[j].rawContract.address) {
+              sendedTx.transfers[j].rawContract.address = 'ETH'
+            }
             sendedTxResult.push({
               type: 'sended',
+              address: sendedTx.transfers[j]?.rawContract.address,
               hash: sendedTx.transfers[j].hash,
               from: sendedTx.transfers[j].from,
               to: sendedTx.transfers[j].to,
               asset: sendedTx.transfers[j].asset,
               value: sendedTx.transfers[j].value,
-              date: new Date(sendedTx.transfers[j].metadata.blockTimestamp).getTime()
+              date: new Date(
+                sendedTx.transfers[j].metadata.blockTimestamp,
+              ).getTime(),
             })
           }
-          console.log('done')
         }
         let recevedTxResult = []
         if (recevedTx.transfers.length != 0) {
@@ -159,12 +167,15 @@ self.getWhalesTransactions = async function () {
                   recevedTx.transfers[j].asset = metadata.name
                   recevedTxResult.push({
                     type: 'receved',
+                    address: recevedTx.transfers[j].rawContract.address,
                     hash: recevedTx.transfers[j].hash,
                     from: recevedTx.transfers[j].from,
                     to: recevedTx.transfers[j].to,
                     asset: recevedTx.transfers[j].asset,
                     value: recevedTx.transfers[j].value,
-                    date: new Date(recevedTx.transfers[j].metadata.blockTimestamp).getTime()
+                    date: new Date(
+                      recevedTx.transfers[j].metadata.blockTimestamp,
+                    ).getTime(),
                   })
                 }
               } catch (e) {
@@ -172,30 +183,44 @@ self.getWhalesTransactions = async function () {
                 continue
               }
             }
+            if (!recevedTx.transfers[j].rawContract.address) {
+              recevedTx.transfers[j].rawContract.address = 'ETH'
+            }
             recevedTxResult.push({
               type: 'receved',
+              address: recevedTx.transfers[j]?.rawContract.address,
               hash: recevedTx.transfers[j].hash,
               from: recevedTx.transfers[j].from,
               to: recevedTx.transfers[j].to,
               asset: recevedTx.transfers[j].asset,
               value: recevedTx.transfers[j].value,
-              date: new Date(recevedTx.transfers[j].metadata.blockTimestamp).getTime()
+              date: new Date(
+                recevedTx.transfers[j].metadata.blockTimestamp,
+              ).getTime(),
             })
           }
-          result = result.concat(sendedTxResult).concat(recevedTxResult)
-          console.log('test')
         }
+        sendedTxResult = sendedTxResult.concat(recevedTxResult)
+        if(sendedTxResult.length != 0){
+          await transactionsModel.insertMany(result)
+          console.log("updated")
+        }
+        // result = result.concat(sendedTxResult).concat(recevedTxResult)
         console.log(i)
       } catch (e) {
         console.log(e)
         continue
       }
     }
+    // await transactionsModel.insertMany(result)
+    await blockchainsModel.updateOne(
+      { name: 'Ethereum' },
+      { updatedBlocks: currentBlock },
+    )
     let endTime = Date.now()
     console.log(endTime - startTime)
-    await transactionsModel.insertMany(result)
-    await blockchainsModel.updateOne({ name: "Ethereum"}, { updatedBlocks: currentBlock })
-    return result
+    console.log('ended')
+    return
     // 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B : Universal Router Uniswap
   } catch (e) {
     console.log(e)

@@ -4,8 +4,7 @@ const Schema = mongoose.Schema;
 const transactionConfig = {
     hash: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     from: {
         type: String,

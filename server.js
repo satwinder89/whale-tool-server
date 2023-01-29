@@ -1,16 +1,13 @@
 require('dotenv').config()
 const database = require("./database/connectDB")
 
-const addressBalances = require('./ethereum/addressBalances')
+const scheduler = require("./crons/scheduler")
 
 const runMain = async () => {
   try {
     await database.connectDB();
-    // let test0 = await addressBalances.updateWallet()
-    // let test = await addressBalances.accountToken()
-    let test = await addressBalances.getWhalesTransactions()
-    // let test = await addressBalances.setBlockchain()
-    console.log(test)
+    scheduler.syncTransactions();
+    console.log("all is ok")
   } catch (error) {
     console.log(error)
     process.exit(1)
