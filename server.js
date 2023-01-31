@@ -5,10 +5,15 @@ const port = process.env.PORT || 3000;
 const database = require("./database/connectDB")
 const scheduler = require("./crons/scheduler")
 
+const test = require("./ethereum/test")
+
 const runMain = async () => {
   try {
     await database.connectDB();
-    scheduler.syncTransactions();
+    // scheduler.syncTransactions();
+    await test.webhook();
+
+
     console.log("all is ok")
   } catch (error) {
     console.log(error)
@@ -20,4 +25,4 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
-runMain()
+runMain() 

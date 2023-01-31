@@ -1,5 +1,5 @@
 // Setup: npm install alchemy-sdk
-const { Alchemy, Network } = require('alchemy-sdk')
+const { Alchemy, Network, AlchemySubscription } = require('alchemy-sdk')
 
 require('dotenv').config()
 const util = require('util')
@@ -10,6 +10,7 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const ethers = require('ethers')
+const BigNumber = require('big-number/big-number')
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -167,6 +168,300 @@ self.accountEthBalance = async function () {
       console.log('chiamata numer: ' + count)
     }
     return true
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.webhook = async function () {
+  try {
+    let wallets = await walletsModel.find().lean()
+    let walletsArray = []
+    for (let i = 0; i < wallets.length; i++) {
+      walletsArray.push(wallets[i].address)
+    }
+    for (let i = 0; i < 400; i++) {
+      alchemy.ws.on(
+        {
+          method: AlchemySubscription.MINED_TRANSACTIONS,
+          addresses: [
+            {
+              form: walletsArray[i],
+            },
+            {
+              to: walletsArray[i],
+            },
+          ],
+          includeRemoved: true,
+          hashesOnly: false,
+        },
+        async (tx) => {
+          tx = await alchemy.core.getTransaction(tx.transaction.hash)
+          const sendedTx = await alchemy.core.getAssetTransfers({
+            fromBlock: tx.blockNumber,
+            toBlock: tx.blockNumber,
+            fromAddress: tx.from,
+            category: ['erc20', 'internal', 'external'],
+            withMetadata: true,
+          })
+          let sendedTxResult = []
+          if (sendedTx.transfers.length != 0) {
+            for (let j = 0; j < sendedTx.transfers.length; j++) {
+              if (!sendedTx.transfers[j].asset) {
+                try {
+                  let metadata
+                  if (sendedTx.transfers[j].rawContract.address != null) {
+                    metadata = await alchemy.core.getTokenMetadata(
+                      sendedTx.transfers[j].rawContract.address,
+                    )
+                    let balance =
+                      sendedTx.transfers[j].rawContract.value /
+                      Math.pow(10, metadata.decimals)
+                    sendedTx.transfers[j].value = Number(balance.toFixed(10))
+                    sendedTx.transfers[j].asset = metadata.name
+                    sendedTxResult.push({
+                      type: 'sended',
+                      address: sendedTx.transfers[j].rawContract.address,
+                      hash: sendedTx.transfers[j].hash,
+                      from: sendedTx.transfers[j].from,
+                      to: sendedTx.transfers[j].to,
+                      asset: sendedTx.transfers[j].asset,
+                      value: sendedTx.transfers[j].value,
+                      date: new Date(
+                        sendedTx.transfers[j].metadata.blockTimestamp,
+                      ).getTime(),
+                    })
+                  }
+                } catch (e) {
+                  console.log(e)
+                  continue
+                }
+              }
+              if (!sendedTx.transfers[j].rawContract.address) {
+                sendedTx.transfers[j].rawContract.address = 'ETH'
+              }
+              sendedTxResult.push({
+                type: 'sended',
+                address: sendedTx.transfers[j]?.rawContract.address,
+                hash: sendedTx.transfers[j].hash,
+                from: sendedTx.transfers[j].from,
+                to: sendedTx.transfers[j].to,
+                asset: sendedTx.transfers[j].asset,
+                value: sendedTx.transfers[j].value,
+                date: new Date(
+                  sendedTx.transfers[j].metadata.blockTimestamp,
+                ).getTime(),
+              })
+            }
+          }
+          const recevedTx = await alchemy.core.getAssetTransfers({
+            fromBlock: tx.blockNumber,
+            toBlock: tx.blockNumber,
+            toAddress: tx.from,
+            category: ['erc20', 'internal', 'external'],
+            withMetadata: true,
+          })
+          let recevedTxResult = []
+          if (recevedTx.transfers.length != 0) {
+            for (let j = 0; j < recevedTx.transfers.length; j++) {
+              if (!recevedTx.transfers[j].asset) {
+                try {
+                  let metadata
+                  if (recevedTx.transfers[j].rawContract.address != null) {
+                    metadata = await alchemy.core.getTokenMetadata(
+                      recevedTx.transfers[j].rawContract.address,
+                    )
+                    let balance =
+                      recevedTx.transfers[j].rawContract.value /
+                      Math.pow(10, metadata.decimals)
+                    recevedTx.transfers[j].value = Number(balance.toFixed(10))
+                    recevedTx.transfers[j].asset = metadata.name
+                    recevedTxResult.push({
+                      type: 'receved',
+                      address: recevedTx.transfers[j].rawContract.address,
+                      hash: recevedTx.transfers[j].hash,
+                      from: recevedTx.transfers[j].from,
+                      to: recevedTx.transfers[j].to,
+                      asset: recevedTx.transfers[j].asset,
+                      value: recevedTx.transfers[j].value,
+                      date: new Date(
+                        recevedTx.transfers[j].metadata.blockTimestamp,
+                      ).getTime(),
+                    })
+                  }
+                } catch (e) {
+                  console.log(e)
+                  continue
+                }
+              }
+              if (!recevedTx.transfers[j].rawContract.address) {
+                recevedTx.transfers[j].rawContract.address = 'ETH'
+              }
+              recevedTxResult.push({
+                type: 'receved',
+                address: recevedTx.transfers[j]?.rawContract.address,
+                hash: recevedTx.transfers[j].hash,
+                from: recevedTx.transfers[j].from,
+                to: recevedTx.transfers[j].to,
+                asset: recevedTx.transfers[j].asset,
+                value: recevedTx.transfers[j].value,
+                date: new Date(
+                  recevedTx.transfers[j].metadata.blockTimestamp,
+                ).getTime(),
+              })
+            }
+          }
+          // tx.transacion.blockNumber = convert(tx.transacion.blockNumber)
+          console.log(tx)
+        },
+      )
+      console.log(i)
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.addressInList = function (address, addressList) {
+  try {
+    if (addressList.includes(address)) {
+      return { from }
+    } else {
+      console.log(`${string} is not in the array`)
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.teatWebhook = async function () {
+  try {
+    let wallets = await walletsModel.find().lean()
+    let blockchain = await blockchainsModel.findOne({ name: 'Ethereum' }).lean()
+    let walletsArray = []
+    for (let i = 0; i < wallets.length; i++) {
+      walletsArray.push(wallets[i].address)
+    }
+    let tx = await alchemy.core.getTransaction(
+      '0x729c930b7fefeb901bb27ab4ed5df9da3add7107ccc13014f38d19cc782fdb14',
+    )
+    let valueInEther = ethers.utils.formatEther(tx.value)
+    tx = await alchemy.core.getTransaction(tx.hash)
+    const sendedTx = await alchemy.core.getAssetTransfers({
+      fromBlock: tx.blockNumber,
+      toBlock: tx.blockNumber,
+      fromAddress: tx.from,
+      category: ['erc20', 'internal', 'external'],
+      withMetadata: true,
+    })
+    let sendedTxResult = []
+    if (sendedTx.transfers.length != 0) {
+      for (let j = 0; j < sendedTx.transfers.length; j++) {
+        if (!sendedTx.transfers[j].asset) {
+          try {
+            let metadata
+            if (sendedTx.transfers[j].rawContract.address != null) {
+              metadata = await alchemy.core.getTokenMetadata(
+                sendedTx.transfers[j].rawContract.address,
+              )
+              let balance =
+                sendedTx.transfers[j].rawContract.value /
+                Math.pow(10, metadata.decimals)
+              sendedTx.transfers[j].value = Number(balance.toFixed(10))
+              sendedTx.transfers[j].asset = metadata.name
+              sendedTxResult.push({
+                type: 'sended',
+                address: sendedTx.transfers[j].rawContract.address,
+                hash: sendedTx.transfers[j].hash,
+                from: sendedTx.transfers[j].from,
+                to: sendedTx.transfers[j].to,
+                asset: sendedTx.transfers[j].asset,
+                value: sendedTx.transfers[j].value,
+                date: new Date(
+                  sendedTx.transfers[j].metadata.blockTimestamp,
+                ).getTime(),
+              })
+            }
+          } catch (e) {
+            console.log(e)
+            continue
+          }
+        }
+        if (!sendedTx.transfers[j].rawContract.address) {
+          sendedTx.transfers[j].rawContract.address = 'ETH'
+        }
+        sendedTxResult.push({
+          type: 'sended',
+          address: sendedTx.transfers[j]?.rawContract.address,
+          hash: sendedTx.transfers[j].hash,
+          from: sendedTx.transfers[j].from,
+          to: sendedTx.transfers[j].to,
+          asset: sendedTx.transfers[j].asset,
+          value: sendedTx.transfers[j].value,
+          date: new Date(
+            sendedTx.transfers[j].metadata.blockTimestamp,
+          ).getTime(),
+        })
+      }
+    }
+    const recevedTx = await alchemy.core.getAssetTransfers({
+      fromBlock: tx.blockNumber,
+      toBlock: tx.blockNumber,
+      toAddress: tx.from,
+      category: ['erc20', 'internal', 'external'],
+      withMetadata: true,
+    })
+    let recevedTxResult = []
+    if (recevedTx.transfers.length != 0) {
+      for (let j = 0; j < recevedTx.transfers.length; j++) {
+        if (!recevedTx.transfers[j].asset) {
+          try {
+            let metadata
+            if (recevedTx.transfers[j].rawContract.address != null) {
+              metadata = await alchemy.core.getTokenMetadata(
+                recevedTx.transfers[j].rawContract.address,
+              )
+              let balance =
+                recevedTx.transfers[j].rawContract.value /
+                Math.pow(10, metadata.decimals)
+              recevedTx.transfers[j].value = Number(balance.toFixed(10))
+              recevedTx.transfers[j].asset = metadata.name
+              recevedTxResult.push({
+                type: 'receved',
+                address: recevedTx.transfers[j].rawContract.address,
+                hash: recevedTx.transfers[j].hash,
+                from: recevedTx.transfers[j].from,
+                to: recevedTx.transfers[j].to,
+                asset: recevedTx.transfers[j].asset,
+                value: recevedTx.transfers[j].value,
+                date: new Date(
+                  recevedTx.transfers[j].metadata.blockTimestamp,
+                ).getTime(),
+              })
+            }
+          } catch (e) {
+            console.log(e)
+            continue
+          }
+        }
+        if (!recevedTx.transfers[j].rawContract.address) {
+          recevedTx.transfers[j].rawContract.address = 'ETH'
+        }
+        recevedTxResult.push({
+          type: 'receved',
+          address: recevedTx.transfers[j]?.rawContract.address,
+          hash: recevedTx.transfers[j].hash,
+          from: recevedTx.transfers[j].from,
+          to: recevedTx.transfers[j].to,
+          asset: recevedTx.transfers[j].asset,
+          value: recevedTx.transfers[j].value,
+          date: new Date(
+            recevedTx.transfers[j].metadata.blockTimestamp,
+          ).getTime(),
+        })
+      }
+    }
+    console.log('ok')
   } catch (e) {
     console.log(e)
   }
