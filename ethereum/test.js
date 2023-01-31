@@ -311,6 +311,11 @@ self.webhook = async function () {
               })
             }
           }
+          sendedTxResult = sendedTxResult.concat(recevedTxResult)
+          if (sendedTxResult.length != 0) {
+            await transactionsModel.insertMany(result)
+            console.log('updated')
+          }
           // tx.transacion.blockNumber = convert(tx.transacion.blockNumber)
           console.log(tx)
         },

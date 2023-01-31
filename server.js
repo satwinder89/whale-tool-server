@@ -6,12 +6,13 @@ const database = require("./database/connectDB")
 const scheduler = require("./crons/scheduler")
 
 const test = require("./ethereum/test")
+const ethereum = require('./ethereum/addressBalances')
 
 const runMain = async () => {
   try {
     await database.connectDB();
     // scheduler.syncTransactions();
-    await test.webhook();
+    await ethereum.webhook()
 
 
     console.log("all is ok")
