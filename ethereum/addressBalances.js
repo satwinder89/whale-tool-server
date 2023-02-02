@@ -269,7 +269,7 @@ self.webhook = async function () {
         console.log('The latest block number is', blockNumber)
         let block = await alchemy.core.getBlockWithTransactions(blockNumber)
         await blockTransactionsModel.create(block)
-        console.log(block)
+        // console.log(block)
       } catch (e) {
         console.log(e)
       }
