@@ -4,7 +4,9 @@ require('dotenv').config()
 const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
+const blockTransactionsModel = require('../database/models/blockTransactions')
 const ethers = require('ethers')
+var walletsArray = null
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -201,9 +203,9 @@ self.getWhalesTransactions = async function () {
           }
         }
         sendedTxResult = sendedTxResult.concat(recevedTxResult)
-        if(sendedTxResult.length != 0){
+        if (sendedTxResult.length != 0) {
           await transactionsModel.insertMany(result)
-          console.log("updated")
+          console.log('updated')
         }
         // result = result.concat(sendedTxResult).concat(recevedTxResult)
         console.log(i)
@@ -227,76 +229,83 @@ self.getWhalesTransactions = async function () {
   }
 }
 
-self.webhook = async function () {
+self.checkTxList = async function () {
   try {
     let wallets = await walletsModel.find().lean()
-    let walletsArray = []
-    for (let i = 0; i < wallets.length; i++) {
-      walletsArray.push(wallets[i].address)
+    walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
+    let blocksTransactions = await blockTransactionsModel.find({
+      elaborated: false,
+    }).lean()
+    console.log("New block transactions: " + blocksTransactions.length)
+    const filteredTransactions = blocksTransactions
+      .flatMap(({ transactions }) => transactions)
+      .filter(({ from, to }) => (from && walletsArray.includes(from.toLowerCase())) || (to && walletsArray.includes(to.toLowerCase())));
+
+    if (filteredTransactions.length > 0) {
+      for (var i = 0; i < filteredTransactions.length; i++) {
+        if (walletsArray.includes(filteredTransactions[i].from.toLowerCase())) {
+          await self.getSenderTransactions(filteredTransactions[i].from.toLowerCase(), filteredTransactions[i].blockNumber)
+          await self.getReceverTransactions(filteredTransactions[i].from.toLowerCase(), filteredTransactions[i].blockNumber)
+        } else if (walletsArray.includes(filteredTransactions[i].to.toLowerCase())) {
+          await self.getSenderTransactions(filteredTransactions[i].to.toLowerCase(), filteredTransactions[i].blockNumber)
+          await self.getReceverTransactions(filteredTransactions[i].to.toLowerCase(), filteredTransactions[i].blockNumber)
+        }
+      }
     }
-    for (let i = 0; i < 400; i++) {
-      alchemy.ws.on(
-        {
-          method: AlchemySubscription.MINED_TRANSACTIONS,
-          addresses: [
-            {
-              form: walletsArray[i],
-            },
-            {
-              to: walletsArray[i],
-            },
-          ],
-          includeRemoved: true,
-          hashesOnly: false,
-        },
-        async (tx) => {
-          tx = await alchemy.core.getTransaction(tx.transaction.hash)
-          const sendedTx = await alchemy.core.getAssetTransfers({
-            fromBlock: tx.blockNumber,
-            toBlock: tx.blockNumber,
-            fromAddress: tx.from,
-            category: ['erc20', 'internal', 'external'],
-            withMetadata: true,
-          })
-          let sendedTxResult = []
-          if (sendedTx.transfers.length != 0) {
-            for (let j = 0; j < sendedTx.transfers.length; j++) {
-              if (!sendedTx.transfers[j].asset) {
-                try {
-                  let metadata
-                  if (sendedTx.transfers[j].rawContract.address != null) {
-                    metadata = await alchemy.core.getTokenMetadata(
-                      sendedTx.transfers[j].rawContract.address,
-                    )
-                    let balance =
-                      sendedTx.transfers[j].rawContract.value /
-                      Math.pow(10, metadata.decimals)
-                    sendedTx.transfers[j].value = Number(balance.toFixed(10))
-                    sendedTx.transfers[j].asset = metadata.name
-                    sendedTxResult.push({
-                      type: 'sended',
-                      address: sendedTx.transfers[j].rawContract.address,
-                      hash: sendedTx.transfers[j].hash,
-                      from: sendedTx.transfers[j].from,
-                      to: sendedTx.transfers[j].to,
-                      asset: sendedTx.transfers[j].asset,
-                      value: sendedTx.transfers[j].value,
-                      date: new Date(
-                        sendedTx.transfers[j].metadata.blockTimestamp,
-                      ).getTime(),
-                    })
-                  }
-                } catch (e) {
-                  console.log(e)
-                  continue
-                }
-              }
-              if (!sendedTx.transfers[j].rawContract.address) {
-                sendedTx.transfers[j].rawContract.address = 'ETH'
-              }
+    await blockTransactionsModel.updateMany(
+      { _id: { $in: blocksTransactions.map(x => x._id) } },
+      { $set: { elaborated: true } }
+    );
+    console.log("Transactions Elaborated")
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.webhook = async function () {
+  try {
+    alchemy.ws.on('block', async (blockNumber) => {
+      try {
+        console.log('The latest block number is', blockNumber)
+        let block = await alchemy.core.getBlockWithTransactions(blockNumber)
+        await blockTransactionsModel.create(block)
+        console.log(block)
+      } catch (e) {
+        console.log(e)
+      }
+    })
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.getSenderTransactions = async function (from, blockNumber) {
+  try {
+    const sendedTx = await alchemy.core.getAssetTransfers({
+      fromBlock: blockNumber,
+      toBlock: blockNumber,
+      fromAddress: from,
+      category: ['erc20', 'internal', 'external'],
+      withMetadata: true,
+    })
+    let sendedTxResult = []
+    if (sendedTx.transfers.length != 0) {
+      for (let j = 0; j < sendedTx.transfers.length; j++) {
+        if (!sendedTx.transfers[j].asset) {
+          try {
+            let metadata
+            if (sendedTx.transfers[j].rawContract.address != null) {
+              metadata = await alchemy.core.getTokenMetadata(
+                sendedTx.transfers[j].rawContract.address,
+              )
+              let balance =
+                sendedTx.transfers[j].rawContract.value /
+                Math.pow(10, metadata.decimals)
+              sendedTx.transfers[j].value = Number(balance.toFixed(10))
+              sendedTx.transfers[j].asset = metadata.name
               sendedTxResult.push({
                 type: 'sended',
-                address: sendedTx.transfers[j]?.rawContract.address,
+                address: sendedTx.transfers[j].rawContract.address,
                 hash: sendedTx.transfers[j].hash,
                 from: sendedTx.transfers[j].from,
                 to: sendedTx.transfers[j].to,
@@ -307,53 +316,64 @@ self.webhook = async function () {
                 ).getTime(),
               })
             }
+          } catch (e) {
+            console.log(e)
+            continue
           }
-          const recevedTx = await alchemy.core.getAssetTransfers({
-            fromBlock: tx.blockNumber,
-            toBlock: tx.blockNumber,
-            toAddress: tx.from,
-            category: ['erc20', 'internal', 'external'],
-            withMetadata: true,
-          })
-          let recevedTxResult = []
-          if (recevedTx.transfers.length != 0) {
-            for (let j = 0; j < recevedTx.transfers.length; j++) {
-              if (!recevedTx.transfers[j].asset) {
-                try {
-                  let metadata
-                  if (recevedTx.transfers[j].rawContract.address != null) {
-                    metadata = await alchemy.core.getTokenMetadata(
-                      recevedTx.transfers[j].rawContract.address,
-                    )
-                    let balance =
-                      recevedTx.transfers[j].rawContract.value /
-                      Math.pow(10, metadata.decimals)
-                    recevedTx.transfers[j].value = Number(balance.toFixed(10))
-                    recevedTx.transfers[j].asset = metadata.name
-                    recevedTxResult.push({
-                      type: 'receved',
-                      address: recevedTx.transfers[j].rawContract.address,
-                      hash: recevedTx.transfers[j].hash,
-                      from: recevedTx.transfers[j].from,
-                      to: recevedTx.transfers[j].to,
-                      asset: recevedTx.transfers[j].asset,
-                      value: recevedTx.transfers[j].value,
-                      date: new Date(
-                        recevedTx.transfers[j].metadata.blockTimestamp,
-                      ).getTime(),
-                    })
-                  }
-                } catch (e) {
-                  console.log(e)
-                  continue
-                }
-              }
-              if (!recevedTx.transfers[j].rawContract.address) {
-                recevedTx.transfers[j].rawContract.address = 'ETH'
-              }
+        }
+        if (!sendedTx.transfers[j].rawContract.address) {
+          sendedTx.transfers[j].rawContract.address = 'ETH'
+        }
+        sendedTxResult.push({
+          type: 'sended',
+          address: sendedTx.transfers[j]?.rawContract.address,
+          hash: sendedTx.transfers[j].hash,
+          from: sendedTx.transfers[j].from,
+          to: sendedTx.transfers[j].to,
+          asset: sendedTx.transfers[j].asset,
+          value: sendedTx.transfers[j].value,
+          date: new Date(
+            sendedTx.transfers[j].metadata.blockTimestamp,
+          ).getTime(),
+        })
+      }
+    }
+    if (sendedTxResult.length != 0) {
+      await transactionsModel.insertMany(sendedTxResult)
+      console.log('updated')
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.getReceverTransactions = async function (to, blockNumber) {
+  try {
+    const recevedTx = await alchemy.core.getAssetTransfers({
+      fromBlock: blockNumber,
+      toBlock: blockNumber,
+      toAddress: to,
+      category: ['erc20', 'internal', 'external'],
+      withMetadata: true,
+    })
+    let recevedTxResult = []
+    if (recevedTx.transfers.length != 0) {
+      for (let j = 0; j < recevedTx.transfers.length; j++) {
+        if (!recevedTx.transfers[j].asset) {
+          try {
+            let metadata
+            if (recevedTx.transfers[j].rawContract.address != null) {
+              metadata = await alchemy.core.getTokenMetadata(
+                recevedTx.transfers[j].rawContract.address,
+              )
+              let balance =
+                recevedTx.transfers[j].rawContract.value /
+                Math.pow(10, metadata.decimals)
+              recevedTx.transfers[j].value = Number(balance.toFixed(10))
+              recevedTx.transfers[j].asset = metadata.name
               recevedTxResult.push({
                 type: 'receved',
-                address: recevedTx.transfers[j]?.rawContract.address,
+                address: recevedTx.transfers[j].rawContract.address,
                 hash: recevedTx.transfers[j].hash,
                 from: recevedTx.transfers[j].from,
                 to: recevedTx.transfers[j].to,
@@ -364,17 +384,31 @@ self.webhook = async function () {
                 ).getTime(),
               })
             }
+          } catch (e) {
+            console.log(e)
+            continue
           }
-          sendedTxResult = sendedTxResult.concat(recevedTxResult)
-          if (sendedTxResult.length != 0) {
-            await transactionsModel.insertMany(result)
-            console.log('updated')
-          }
-          // tx.transacion.blockNumber = convert(tx.transacion.blockNumber)
-          console.log(tx)
-        },
-      )
-      console.log(i)
+        }
+        if (!recevedTx.transfers[j].rawContract.address) {
+          recevedTx.transfers[j].rawContract.address = 'ETH'
+        }
+        recevedTxResult.push({
+          type: 'receved',
+          address: recevedTx.transfers[j]?.rawContract.address,
+          hash: recevedTx.transfers[j].hash,
+          from: recevedTx.transfers[j].from,
+          to: recevedTx.transfers[j].to,
+          asset: recevedTx.transfers[j].asset,
+          value: recevedTx.transfers[j].value,
+          date: new Date(
+            recevedTx.transfers[j].metadata.blockTimestamp,
+          ).getTime(),
+        })
+      }
+    }
+    if (recevedTxResult.length != 0) {
+      await transactionsModel.insertMany(recevedTxResult)
+      console.log('updated')
     }
   } catch (e) {
     console.log(e)

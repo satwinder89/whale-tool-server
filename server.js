@@ -1,21 +1,23 @@
 require('dotenv').config()
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
-const database = require("./database/connectDB")
-const scheduler = require("./crons/scheduler")
+const express = require('express')
+const app = express()
+const port = process.env.PORT || 3000
+const database = require('./database/connectDB')
+const scheduler = require('./crons/scheduler')
+const geth = require('./ethereum/geth')
 
-const test = require("./ethereum/test")
+const test = require('./ethereum/test')
 const ethereum = require('./ethereum/addressBalances')
 
 const runMain = async () => {
   try {
-    await database.connectDB();
-    // scheduler.syncTransactions();
+    await database.connectDB()
+
     await ethereum.webhook()
+    scheduler.checkTransactions()
+    // await ethereum.checkTxList()
 
-
-    console.log("all is ok")
+    console.log('all is ok')
   } catch (error) {
     console.log(error)
     process.exit(1)
@@ -23,7 +25,7 @@ const runMain = async () => {
 }
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
-});
+  console.log(`Server running at http://localhost:${port}/`)
+})
 
-runMain() 
+runMain()
