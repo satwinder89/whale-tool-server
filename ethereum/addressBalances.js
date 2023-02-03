@@ -285,7 +285,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
       fromBlock: blockNumber,
       toBlock: blockNumber,
       fromAddress: from,
-      category: ['erc20', 'internal', 'external'],
+      category: ['erc20', 'internal', 'external', 'erc721', 'erc1155', 'specialnft'],
       withMetadata: true,
     })
     let sendedTxResult = []
@@ -353,7 +353,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
       fromBlock: blockNumber,
       toBlock: blockNumber,
       toAddress: to,
-      category: ['erc20', 'internal', 'external'],
+      category: ['erc20', 'internal', 'external', 'erc721', 'erc1155', 'specialnft'],
       withMetadata: true,
     })
     let recevedTxResult = []
