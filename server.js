@@ -14,8 +14,8 @@ const runMain = async () => {
     await database.connectDB()
 
     await ethereum.webhook()
+    scheduler.deleteElaboratedBlocks()
     scheduler.checkTransactions()
-    // await ethereum.checkTxList()
 
     console.log('all is ok')
   } catch (error) {
