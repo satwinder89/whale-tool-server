@@ -279,6 +279,16 @@ self.webhook = async function () {
   }
 }
 
+self.testTransactions = async function () {
+  try {
+    let sender = await self.getSenderTransactions("0x7d03e3e2c833018ee3a8cfcf3876296a2186696c", 16557651)
+    let recever = await self.getReceverTransactions("0x7d03e3e2c833018ee3a8cfcf3876296a2186696c", 16557651)
+    console.log("test done");
+  }catch(e){
+    console.log(e)
+  }
+}
+
 self.getSenderTransactions = async function (from, blockNumber) {
   try {
     const sendedTx = await alchemy.core.getAssetTransfers({
@@ -306,6 +316,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
               sendedTxResult.push({
                 type: 'sended',
                 address: sendedTx.transfers[j].rawContract.address,
+                category: sendedTx.transfers[j].category,
                 hash: sendedTx.transfers[j].hash,
                 from: sendedTx.transfers[j].from,
                 to: sendedTx.transfers[j].to,
@@ -327,6 +338,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
         sendedTxResult.push({
           type: 'sended',
           address: sendedTx.transfers[j]?.rawContract.address,
+          category: sendedTx.transfers[j].category,
           hash: sendedTx.transfers[j].hash,
           from: sendedTx.transfers[j].from,
           to: sendedTx.transfers[j].to,
@@ -374,6 +386,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
               recevedTxResult.push({
                 type: 'receved',
                 address: recevedTx.transfers[j].rawContract.address,
+                category: recevedTx.transfers[j].category,
                 hash: recevedTx.transfers[j].hash,
                 from: recevedTx.transfers[j].from,
                 to: recevedTx.transfers[j].to,
@@ -395,6 +408,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
         recevedTxResult.push({
           type: 'receved',
           address: recevedTx.transfers[j]?.rawContract.address,
+          category: recevedTx.transfers[j].category,
           hash: recevedTx.transfers[j].hash,
           from: recevedTx.transfers[j].from,
           to: recevedTx.transfers[j].to,
