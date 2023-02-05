@@ -1,6 +1,7 @@
 const schedule = require("node-schedule");
 const addressBalances = require("../ethereum/addressBalances");
 const blockTransactionModel = require("../database/models/blockTransactions");
+const transactionsModel = require("../database/models/transactions");
 var self = {}
 
 self.syncTransactions = function () {
@@ -19,6 +20,14 @@ self.deleteElaboratedBlocks = function () {
     schedule.scheduleJob("*/40 * * * *", async function (){
         await blockTransactionModel.deleteMany({ elaborated: true })
         console.log("transactions deleted");
+    })
+}
+
+self.deleteOldTransactions = function () {
+    schedule.scheduleJob({ hour: 1, minute: 1 }, async function () {
+        let oneWeekAgo = Date.now() - 605356000
+        await transactionsModel.deleteMany({ date: { $lt: oneWeekAgo } })
+        console.log("Eliminate le transazioni precedenti al: " + oneWeekAgo)
     })
 }
 
