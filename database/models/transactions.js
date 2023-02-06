@@ -1,44 +1,52 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
 
 const transactionConfig = {
-    hash: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    from: {
-        type: String,
-        required: true
-    },
-    to: {
-        type: String,
-        required: true
-    },
-    asset: {
-        type: String,
-    },
-    value: {
-        type: Number,
-    },
-    type: {
-        type: String,
-        required: true
-    },
-    insert_date: {
-        type: Number
-    },
-    update_date: {
-        type: Number
-    }
+  hash: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  from: {
+    type: String,
+    required: true,
+  },
+  to: {
+    type: String,
+    required: true,
+  },
+  category: {
+    type: String,
+  },
+  asset: {
+    type: String,
+  },
+  value: {
+    type: Number,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Number,
+    required: true,
+  },
 }
 
 let transactions = new Schema(transactionConfig, {
-    collection: "transactions",
-    versionKey: false,
-    strict: false
-});
+  collection: 'transactions',
+  versionKey: false,
+  strict: false,
+})
 
-transactions.index({ hash: 1, from: 1, to: 1 })
+transactions.index({
+  hash: 1,
+  from: 1,
+  category: 1,
+  asset: 1,
+  type: 1,
+  date: 1,
+})
 
-module.exports = mongoose.model("transactions", transactions)
+module.exports = mongoose.model('transactions', transactions)

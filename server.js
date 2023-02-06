@@ -4,7 +4,6 @@ const app = express()
 const port = process.env.PORT || 3000
 const database = require('./database/connectDB')
 const scheduler = require('./crons/scheduler')
-const geth = require('./ethereum/geth')
 
 const test = require('./ethereum/test')
 const ethereum = require('./ethereum/addressBalances')

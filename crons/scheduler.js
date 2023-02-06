@@ -25,7 +25,7 @@ self.deleteElaboratedBlocks = function () {
 
 self.deleteOldTransactions = function () {
     schedule.scheduleJob({ hour: 1, minute: 1 }, async function () {
-        let oneWeekAgo = Date.now() - 605356000
+        let oneWeekAgo = Date.now() - 200000000
         await transactionsModel.deleteMany({ date: { $lt: oneWeekAgo } })
         console.log("Eliminate le transazioni precedenti al: " + oneWeekAgo)
     })
