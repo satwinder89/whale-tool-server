@@ -356,23 +356,24 @@ self.getSenderTransactions = async function (from, blockNumber) {
             console.log(e)
             continue
           }
+        } else {
+          if (!sendedTx.transfers[j].rawContract.address) {
+            sendedTx.transfers[j].rawContract.address = 'ETH'
+          }
+          sendedTxResult.push({
+            type: 'sended',
+            address: sendedTx.transfers[j]?.rawContract.address,
+            category: sendedTx.transfers[j].category,
+            hash: sendedTx.transfers[j].hash,
+            from: sendedTx.transfers[j].from,
+            to: sendedTx.transfers[j].to,
+            asset: sendedTx.transfers[j].asset,
+            value: sendedTx.transfers[j].value,
+            date: new Date(
+              sendedTx.transfers[j].metadata.blockTimestamp,
+            ).getTime(),
+          })
         }
-        if (!sendedTx.transfers[j].rawContract.address) {
-          sendedTx.transfers[j].rawContract.address = 'ETH'
-        }
-        sendedTxResult.push({
-          type: 'sended',
-          address: sendedTx.transfers[j]?.rawContract.address,
-          category: sendedTx.transfers[j].category,
-          hash: sendedTx.transfers[j].hash,
-          from: sendedTx.transfers[j].from,
-          to: sendedTx.transfers[j].to,
-          asset: sendedTx.transfers[j].asset,
-          value: sendedTx.transfers[j].value,
-          date: new Date(
-            sendedTx.transfers[j].metadata.blockTimestamp,
-          ).getTime(),
-        })
       }
     }
     if (sendedTxResult.length != 0) {
@@ -433,23 +434,24 @@ self.getReceverTransactions = async function (to, blockNumber) {
             console.log(e)
             continue
           }
+        } else {
+          if (!recevedTx.transfers[j].rawContract.address) {
+            recevedTx.transfers[j].rawContract.address = 'ETH'
+          }
+          recevedTxResult.push({
+            type: 'receved',
+            address: recevedTx.transfers[j]?.rawContract.address,
+            category: recevedTx.transfers[j].category,
+            hash: recevedTx.transfers[j].hash,
+            from: recevedTx.transfers[j].from,
+            to: recevedTx.transfers[j].to,
+            asset: recevedTx.transfers[j].asset,
+            value: recevedTx.transfers[j].value,
+            date: new Date(
+              recevedTx.transfers[j].metadata.blockTimestamp,
+            ).getTime(),
+          })
         }
-        if (!recevedTx.transfers[j].rawContract.address) {
-          recevedTx.transfers[j].rawContract.address = 'ETH'
-        }
-        recevedTxResult.push({
-          type: 'receved',
-          address: recevedTx.transfers[j]?.rawContract.address,
-          category: recevedTx.transfers[j].category,
-          hash: recevedTx.transfers[j].hash,
-          from: recevedTx.transfers[j].from,
-          to: recevedTx.transfers[j].to,
-          asset: recevedTx.transfers[j].asset,
-          value: recevedTx.transfers[j].value,
-          date: new Date(
-            recevedTx.transfers[j].metadata.blockTimestamp,
-          ).getTime(),
-        })
       }
     }
     if (recevedTxResult.length != 0) {
