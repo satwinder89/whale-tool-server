@@ -55,8 +55,7 @@ self.updateWallet = async function (address) {
       { address: address },
       {
         updateDate: Date.now(),
-        $set: { ETH: eth },
-        $set: { tokens: tokens },
+        $set: { ETH: eth, tokens: tokens },
       },
       { upsert: true, new: true },
     )
@@ -242,7 +241,10 @@ self.checkTxList = async function () {
             filteredTransactions[i].from.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          console.log("AGGIORNAMENTO DEL WALLET: " + filteredTransactions[i].from.toLowerCase())
+          console.log(
+            'AGGIORNAMENTO DEL WALLET: ' +
+              filteredTransactions[i].from.toLowerCase(),
+          )
           await self.updateWallet(filteredTransactions[i].from.toLowerCase())
         } else if (
           walletsArray.includes(filteredTransactions[i].to.toLowerCase())
@@ -255,7 +257,10 @@ self.checkTxList = async function () {
             filteredTransactions[i].to.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          console.log("AGGIORNAMENTO DEL WALLET: " + filteredTransactions[i].to.toLowerCase())
+          console.log(
+            'AGGIORNAMENTO DEL WALLET: ' +
+              filteredTransactions[i].to.toLowerCase(),
+          )
           await self.updateWallet(filteredTransactions[i].to.toLowerCase())
         }
       }
