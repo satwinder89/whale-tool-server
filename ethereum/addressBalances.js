@@ -215,9 +215,9 @@ self.getWhalesTransactions = async function () {
 
 self.checkTxList = async function () {
   try {
-    let wallets = await walletsModel.find().lean()
+    let wallets = await walletsModel.find()
     walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
-    let blocksTransactions = await blockTransactionsModel.find().lean()
+    let blocksTransactions = await blockTransactionsModel.find()
     console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions
       .flatMap(({ transactions }) => transactions)
@@ -229,6 +229,7 @@ self.checkTxList = async function () {
     await blockTransactionsModel.deleteMany({
       _id: { $in: blocksTransactions.map((x) => x._id) },
     })
+    let walletsToUpdate = []
     if (filteredTransactions.length > 0) {
       for (var i = 0; i < filteredTransactions.length; i++) {
         if (walletsArray.includes(filteredTransactions[i].from.toLowerCase())) {
@@ -236,39 +237,26 @@ self.checkTxList = async function () {
             filteredTransactions[i].from.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          await self.getReceverTransactions(
-            filteredTransactions[i].from.toLowerCase(),
-            filteredTransactions[i].blockNumber,
-          )
-          console.log(
-            'AGGIORNAMENTO DEL WALLET: ' +
-              filteredTransactions[i].from.toLowerCase(),
-          )
-          await self.updateWallet(filteredTransactions[i].from.toLowerCase())
-        } else if (
-          walletsArray.includes(filteredTransactions[i].to.toLowerCase())
-        ) {
-          await self.getSenderTransactions(
-            filteredTransactions[i].to.toLowerCase(),
-            filteredTransactions[i].blockNumber,
-          )
+          walletsToUpdate.push(filteredTransactions[i].from.toLowerCase())
+        }
+
+        if (walletsArray.includes(filteredTransactions[i].to.toLowerCase())) {
           await self.getReceverTransactions(
             filteredTransactions[i].to.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          console.log(
-            'AGGIORNAMENTO DEL WALLET: ' +
-              filteredTransactions[i].to.toLowerCase(),
-          )
-          await self.updateWallet(filteredTransactions[i].to.toLowerCase())
+          walletsToUpdate.push(filteredTransactions[i].to.toLowerCase())
         }
       }
     }
-    // await blockTransactionsModel.updateMany(
-    //   { _id: { $in: blocksTransactions.map((x) => x._id) } },
-    //   { $set: { elaborated: true } },
-    // )
-    console.log('Transactions Elaborated')
+    let set = new Set(walletsToUpdate);
+    let uniqueArray = Array.from(set);
+    console.log('Aggiornamento di wallets N°: ' + uniqueArray.length)
+    for (let i = 0; i < uniqueArray.length; i++) {
+      await self.updateWallet(uniqueArray[i])
+    }
+
+    console.log('Transactions Elaborated e wallet aggiornati')
   } catch (e) {
     console.log(e)
   }

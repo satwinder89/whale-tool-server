@@ -15,7 +15,7 @@ const runMain = async () => {
     await ethereum.webhook()
     scheduler.checkTransactions()
     scheduler.deleteOldTransactions()
-    // await ethereum.testTransactions()
+    // await ethereum.checkTxList()
     console.log('all is ok')
   } catch (error) {
     console.log(error)
