@@ -226,6 +226,9 @@ self.checkTxList = async function () {
           (from && walletsArray.includes(from.toLowerCase())) ||
           (to && walletsArray.includes(to.toLowerCase())),
       )
+    await blockTransactionsModel.deleteMany({
+      _id: { $in: blocksTransactions.map((x) => x._id) },
+    })
     if (filteredTransactions.length > 0) {
       for (var i = 0; i < filteredTransactions.length; i++) {
         if (walletsArray.includes(filteredTransactions[i].from.toLowerCase())) {
@@ -265,9 +268,6 @@ self.checkTxList = async function () {
     //   { _id: { $in: blocksTransactions.map((x) => x._id) } },
     //   { $set: { elaborated: true } },
     // )
-    await blockTransactionsModel.deleteMany({
-      _id: { $in: blocksTransactions.map((x) => x._id) },
-    })
     console.log('Transactions Elaborated')
   } catch (e) {
     console.log(e)
