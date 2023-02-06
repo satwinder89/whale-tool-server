@@ -16,12 +16,12 @@ self.checkTransactions = function () {
     })
 }
 
-self.deleteElaboratedBlocks = function () {
-    schedule.scheduleJob("*/40 * * * *", async function (){
-        await blockTransactionModel.deleteMany({ elaborated: true })
-        console.log("transactions deleted");
-    })
-}
+// self.deleteElaboratedBlocks = function () {
+//     schedule.scheduleJob("*/10 * * * *", async function (){
+//         await blockTransactionModel.deleteMany({ elaborated: true })
+//         console.log("transactions deleted");
+//     })
+// }
 
 self.deleteOldTransactions = function () {
     schedule.scheduleJob({ hour: 1, minute: 1 }, async function () {

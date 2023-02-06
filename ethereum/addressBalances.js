@@ -265,10 +265,13 @@ self.checkTxList = async function () {
         }
       }
     }
-    await blockTransactionsModel.updateMany(
-      { _id: { $in: blocksTransactions.map((x) => x._id) } },
-      { $set: { elaborated: true } },
-    )
+    // await blockTransactionsModel.updateMany(
+    //   { _id: { $in: blocksTransactions.map((x) => x._id) } },
+    //   { $set: { elaborated: true } },
+    // )
+    await blockTransactionsModel.deleteMany({
+      _id: { $in: blocksTransactions.map((x) => x._id) },
+    })
     console.log('Transactions Elaborated')
   } catch (e) {
     console.log(e)
