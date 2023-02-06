@@ -17,64 +17,49 @@ const alchemy = new Alchemy(config)
 var self = {}
 
 // TEST
-self.updateWallet = async function () {
+self.updateWallet = async function (address) {
   try {
-    let currentTime = Date.now() - 600000
+    let ethBalance = await alchemy.core.getBalance(address, 'latest')
+    let eth = Number(ethBalance._hex) / Math.pow(10, 18) //calculate che ETH from WEI
 
-    let wallets = await walletsModel
-      .find({ updateDate: { $lte: currentTime } })
-      .lean()
-    let count = 0
-    for (var i = 0; i < wallets.length; i++) {
-      let test = await alchemy.core.getBalance(wallets[i].address, 'latest')
-      let eth = Number(test._hex) / Math.pow(10, 18) //calculate che ETH from WEI
-
-      count++
-
-      //other function
-      let tokens = []
-      const balances = await alchemy.core.getTokenBalances(wallets[i].address)
-      count++
-      // Remove tokens with zero balance
-      const nonZeroBalances = balances.tokenBalances.filter((token) => {
-        return token.tokenBalance !== '0'
-      })
-      // Loop through all tokens with non-zero balance
-      for (let token of nonZeroBalances) {
-        let balance = token.tokenBalance
-        let metadata = null
-        try {
-          metadata = await alchemy.core.getTokenMetadata(token.contractAddress)
-        } catch (e) {
-          console.log(e)
-          continue
-        }
-
-        count++
-
-        // Compute token balance in human-readable format
-        balance = balance / Math.pow(10, metadata.decimals)
-        balance = balance.toFixed(10)
-        tokens.push({
-          address: token.contractAddress,
-          name: metadata.name,
-          symbol: metadata.symbol,
-          balance: balance,
-          decimal: metadata.decimals,
-          logo: metadata.logo,
-        })
+    //other function
+    let tokens = []
+    const balances = await alchemy.core.getTokenBalances(address)
+    // Remove tokens with zero balance
+    const nonZeroBalances = balances.tokenBalances.filter((token) => {
+      return token.tokenBalance !== '0'
+    })
+    // Loop through all tokens with non-zero balance
+    for (let token of nonZeroBalances) {
+      let balance = token.tokenBalance
+      let metadata = null
+      try {
+        metadata = await alchemy.core.getTokenMetadata(token.contractAddress)
+      } catch (e) {
+        console.log(e)
+        continue
       }
-      console.log('N ' + i + 'chiamata: ' + count)
-      await walletsModel.findOneAndUpdate(
-        { address: wallets[i].address },
-        {
-          updateDate: Date.now(),
-          $set: { ETH: eth },
-          $set: { tokens: tokens },
-        },
-        { upsert: true, new: true },
-      )
+      // Compute token balance in human-readable format
+      balance = balance / Math.pow(10, metadata.decimals)
+      balance = balance.toFixed(10)
+      tokens.push({
+        address: token.contractAddress,
+        name: metadata.name,
+        symbol: metadata.symbol,
+        balance: balance,
+        decimal: metadata.decimals,
+        logo: metadata.logo,
+      })
     }
+    await walletsModel.findOneAndUpdate(
+      { address: address },
+      {
+        updateDate: Date.now(),
+        $set: { ETH: eth },
+        $set: { tokens: tokens },
+      },
+      { upsert: true, new: true },
+    )
     return true
   } catch (e) {
     console.log(e)
@@ -233,30 +218,53 @@ self.checkTxList = async function () {
   try {
     let wallets = await walletsModel.find().lean()
     walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
-    let blocksTransactions = await blockTransactionsModel.find({
-      elaborated: false,
-    }).lean()
-    console.log("New block transactions: " + blocksTransactions.length)
+    let blocksTransactions = await blockTransactionsModel
+      .find({
+        elaborated: false,
+      })
+      .lean()
+    console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions
       .flatMap(({ transactions }) => transactions)
-      .filter(({ from, to }) => (from && walletsArray.includes(from.toLowerCase())) || (to && walletsArray.includes(to.toLowerCase())));
-
+      .filter(
+        ({ from, to }) =>
+          (from && walletsArray.includes(from.toLowerCase())) ||
+          (to && walletsArray.includes(to.toLowerCase())),
+      )
     if (filteredTransactions.length > 0) {
       for (var i = 0; i < filteredTransactions.length; i++) {
         if (walletsArray.includes(filteredTransactions[i].from.toLowerCase())) {
-          await self.getSenderTransactions(filteredTransactions[i].from.toLowerCase(), filteredTransactions[i].blockNumber)
-          await self.getReceverTransactions(filteredTransactions[i].from.toLowerCase(), filteredTransactions[i].blockNumber)
-        } else if (walletsArray.includes(filteredTransactions[i].to.toLowerCase())) {
-          await self.getSenderTransactions(filteredTransactions[i].to.toLowerCase(), filteredTransactions[i].blockNumber)
-          await self.getReceverTransactions(filteredTransactions[i].to.toLowerCase(), filteredTransactions[i].blockNumber)
+          await self.getSenderTransactions(
+            filteredTransactions[i].from.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
+          await self.getReceverTransactions(
+            filteredTransactions[i].from.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
+          console.log("AGGIORNAMENTO DEL WALLET: " + filteredTransactions[i].from.toLowerCase())
+          await self.updateWallet(filteredTransactions[i].from.toLowerCase())
+        } else if (
+          walletsArray.includes(filteredTransactions[i].to.toLowerCase())
+        ) {
+          await self.getSenderTransactions(
+            filteredTransactions[i].to.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
+          await self.getReceverTransactions(
+            filteredTransactions[i].to.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
+          console.log("AGGIORNAMENTO DEL WALLET: " + filteredTransactions[i].to.toLowerCase())
+          await self.updateWallet(filteredTransactions[i].to.toLowerCase())
         }
       }
     }
     await blockTransactionsModel.updateMany(
-      { _id: { $in: blocksTransactions.map(x => x._id) } },
-      { $set: { elaborated: true } }
-    );
-    console.log("Transactions Elaborated")
+      { _id: { $in: blocksTransactions.map((x) => x._id) } },
+      { $set: { elaborated: true } },
+    )
+    console.log('Transactions Elaborated')
   } catch (e) {
     console.log(e)
   }
@@ -281,10 +289,16 @@ self.webhook = async function () {
 
 self.testTransactions = async function () {
   try {
-    let sender = await self.getSenderTransactions("0x7d03e3e2c833018ee3a8cfcf3876296a2186696c", 16557651)
-    let recever = await self.getReceverTransactions("0x7d03e3e2c833018ee3a8cfcf3876296a2186696c", 16557651)
-    console.log("test done");
-  }catch(e){
+    let sender = await self.getSenderTransactions(
+      '0x7d03e3e2c833018ee3a8cfcf3876296a2186696c',
+      16557651,
+    )
+    let recever = await self.getReceverTransactions(
+      '0x7d03e3e2c833018ee3a8cfcf3876296a2186696c',
+      16557651,
+    )
+    console.log('test done')
+  } catch (e) {
     console.log(e)
   }
 }
@@ -295,7 +309,14 @@ self.getSenderTransactions = async function (from, blockNumber) {
       fromBlock: blockNumber,
       toBlock: blockNumber,
       fromAddress: from,
-      category: ['erc20', 'internal', 'external', 'erc721', 'erc1155', 'specialnft'],
+      category: [
+        'erc20',
+        'internal',
+        'external',
+        'erc721',
+        'erc1155',
+        'specialnft',
+      ],
       withMetadata: true,
     })
     let sendedTxResult = []
@@ -365,7 +386,14 @@ self.getReceverTransactions = async function (to, blockNumber) {
       fromBlock: blockNumber,
       toBlock: blockNumber,
       toAddress: to,
-      category: ['erc20', 'internal', 'external', 'erc721', 'erc1155', 'specialnft'],
+      category: [
+        'erc20',
+        'internal',
+        'external',
+        'erc721',
+        'erc1155',
+        'specialnft',
+      ],
       withMetadata: true,
     })
     let recevedTxResult = []

@@ -71,7 +71,10 @@ self.test1 = async function () {
 self.readStringFile = async function () {
   try {
     const data = await readFile(filePath, 'utf8')
-    var array = data.split(',')
+    var array = data.split('\n')
+    for(var i =0; i < array.length; i++){
+      array[i] = array[i].toLowerCase()
+    }
     return array
   } catch (err) {
     console.log(err)
@@ -132,7 +135,7 @@ self.createAllWallets = async function () {
   try {
     let address = await self.readStringFile()
     let arrayOfAddress = []
-    for (var i = 0; i < address.length; i++) {
+    for (var i = 1; i < address.length; i++) {
       let newAddress = {
         name: 'WHALE #' + i,
         address: address[i],
