@@ -217,11 +217,7 @@ self.checkTxList = async function () {
   try {
     let wallets = await walletsModel.find().lean()
     walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
-    let blocksTransactions = await blockTransactionsModel
-      .find({
-        elaborated: false,
-      })
-      .lean()
+    let blocksTransactions = await blockTransactionsModel.find().lean()
     console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions
       .flatMap(({ transactions }) => transactions)

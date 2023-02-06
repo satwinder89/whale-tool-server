@@ -5,7 +5,6 @@ const transactionConfig = {
   hash: {
     type: String,
     required: true,
-    unique: true,
   },
   from: {
     type: String,
@@ -40,13 +39,7 @@ let transactions = new Schema(transactionConfig, {
   strict: false,
 })
 
-transactions.index({
-  hash: 1,
-  from: 1,
-  category: 1,
-  asset: 1,
-  type: 1,
-  date: 1,
-})
+transactions.index({ hash: 1, from: 1}, { unique: true })
+transactions.index({ date: -1 })
 
 module.exports = mongoose.model('transactions', transactions)
