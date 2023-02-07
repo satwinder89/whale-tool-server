@@ -229,7 +229,7 @@ self.checkTxList = async function () {
     await blockTransactionsModel.deleteMany({
       _id: { $in: blocksTransactions.map((x) => x._id) },
     })
-    let walletsToUpdate = []
+    // let walletsToUpdate = []
     if (filteredTransactions.length > 0) {
       for (var i = 0; i < filteredTransactions.length; i++) {
         if (walletsArray.includes(filteredTransactions[i].from.toLowerCase())) {
@@ -237,26 +237,34 @@ self.checkTxList = async function () {
             filteredTransactions[i].from.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          walletsToUpdate.push(filteredTransactions[i].from.toLowerCase())
+          await self.getReceverTransactions(
+            filteredTransactions[i].from.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
+          // walletsToUpdate.push(filteredTransactions[i].from.toLowerCase())
         }
 
         if (walletsArray.includes(filteredTransactions[i].to.toLowerCase())) {
+          await self.getSenderTransactions(
+            filteredTransactions[i].to.toLowerCase(),
+            filteredTransactions[i].blockNumber,
+          )
           await self.getReceverTransactions(
             filteredTransactions[i].to.toLowerCase(),
             filteredTransactions[i].blockNumber,
           )
-          walletsToUpdate.push(filteredTransactions[i].to.toLowerCase())
+          // walletsToUpdate.push(filteredTransactions[i].to.toLowerCase())
         }
       }
     }
-    let set = new Set(walletsToUpdate);
-    let uniqueArray = Array.from(set);
-    console.log('Aggiornamento di wallets N°: ' + uniqueArray.length)
-    for (let i = 0; i < uniqueArray.length; i++) {
-      await self.updateWallet(uniqueArray[i])
-    }
+    // let set = new Set(walletsToUpdate);
+    // let uniqueArray = Array.from(set);
+    // console.log('Aggiornamento di wallets N°: ' + uniqueArray.length)
+    // for (let i = 0; i < uniqueArray.length; i++) {
+    //   await self.updateWallet(uniqueArray[i])
+    // }
 
-    console.log('Transactions Elaborated e wallet aggiornati')
+    // console.log('Transactions Elaborated e wallet aggiornati')
   } catch (e) {
     console.log(e)
   }
