@@ -6,7 +6,6 @@ const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const blockTransactionsModel = require('../database/models/blockTransactions')
 const ethers = require('ethers')
-var walletsArray = null
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -216,7 +215,7 @@ self.getWhalesTransactions = async function () {
 self.checkTxList = async function () {
   try {
     let wallets = await walletsModel.find()
-    walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
+    var walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
     let blocksTransactions = await blockTransactionsModel.find()
     console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions

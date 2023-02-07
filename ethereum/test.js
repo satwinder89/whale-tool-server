@@ -10,7 +10,17 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const ethers = require('ethers')
-const BigNumber = require('big-number/big-number')
+const Web3 = require('web3');
+
+const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/YOUR-PROJECT-ID'));
+
+async function isSmartContract(address) {
+  const code = await web3.eth.getCode(address);
+  return code.length > 2;
+}
+
+
+//https://eth-mainnet.g.alchemy.com/v2/EU0mDtrpOPKJMgrWfYm-7GeKGJMaJFZa
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
