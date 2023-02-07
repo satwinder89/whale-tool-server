@@ -287,22 +287,6 @@ self.webhook = async function () {
   }
 }
 
-self.testTransactions = async function () {
-  try {
-    let sender = await self.getSenderTransactions(
-      '0x7d03e3e2c833018ee3a8cfcf3876296a2186696c',
-      16557651,
-    )
-    let recever = await self.getReceverTransactions(
-      '0x7d03e3e2c833018ee3a8cfcf3876296a2186696c',
-      16557651,
-    )
-    console.log('test done')
-  } catch (e) {
-    console.log(e)
-  }
-}
-
 self.getSenderTransactions = async function (from, blockNumber) {
   try {
     const sendedTx = await alchemy.core.getAssetTransfers({
@@ -335,6 +319,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
               sendedTx.transfers[j].value = Number(balance.toFixed(10))
               sendedTx.transfers[j].asset = metadata.name
               sendedTxResult.push({
+                uniqueId: sendedTx.transfers[j].uniqueId,
                 type: 'sended',
                 address: sendedTx.transfers[j].rawContract.address,
                 category: sendedTx.transfers[j].category,
@@ -357,6 +342,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
             sendedTx.transfers[j].rawContract.address = 'ETH'
           }
           sendedTxResult.push({
+            uniqueId: sendedTx.transfers[j].uniqueId,
             type: 'sended',
             address: sendedTx.transfers[j]?.rawContract.address,
             category: sendedTx.transfers[j].category,
@@ -413,6 +399,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
               recevedTx.transfers[j].value = Number(balance.toFixed(10))
               recevedTx.transfers[j].asset = metadata.name
               recevedTxResult.push({
+                uniqueId: recevedTx.transfers[j].uniqueId,
                 type: 'receved',
                 address: recevedTx.transfers[j].rawContract.address,
                 category: recevedTx.transfers[j].category,
@@ -435,6 +422,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
             recevedTx.transfers[j].rawContract.address = 'ETH'
           }
           recevedTxResult.push({
+            uniqueId: recevedTx.transfers[j].uniqueId,
             type: 'receved',
             address: recevedTx.transfers[j]?.rawContract.address,
             category: recevedTx.transfers[j].category,

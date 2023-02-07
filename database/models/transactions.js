@@ -31,6 +31,11 @@ const transactionConfig = {
     type: Number,
     required: true,
   },
+  uniqueId: {
+    type: String,
+    required: true,
+    unique: true
+  }
 }
 
 let transactions = new Schema(transactionConfig, {
@@ -39,7 +44,7 @@ let transactions = new Schema(transactionConfig, {
   strict: false,
 })
 
-transactions.index({ hash: 1, from: 1, to: 1, date: 1}, { unique: true })
+transactions.index({ hash: 1, from: 1})
 transactions.index({ date: -1 })
 
 module.exports = mongoose.model('transactions', transactions)
