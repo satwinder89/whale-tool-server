@@ -11,7 +11,6 @@ const ethereum = require('./ethereum/addressBalances')
 const runMain = async () => {
   try {
     await database.connectDB()
-
     await ethereum.webhook()
     scheduler.checkTransactions()
     scheduler.deleteOldTransactions()

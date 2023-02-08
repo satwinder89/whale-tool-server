@@ -10,15 +10,13 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const ethers = require('ethers')
-const Web3 = require('web3');
+const Web3 = require('web3')
 
-const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/YOUR-PROJECT-ID'));
-
-async function isSmartContract(address) {
-  const code = await web3.eth.getCode(address);
-  return code.length > 2;
-}
-
+const web3 = new Web3(
+  new Web3.providers.HttpProvider(
+    'https://eth-mainnet.g.alchemy.com/v2/EU0mDtrpOPKJMgrWfYm-7GeKGJMaJFZa',
+  ),
+)
 
 //https://eth-mainnet.g.alchemy.com/v2/EU0mDtrpOPKJMgrWfYm-7GeKGJMaJFZa
 
@@ -29,6 +27,24 @@ const config = {
 const alchemy = new Alchemy(config)
 
 var self = {}
+
+self.isSmartContract = async function () {
+  try {
+    let wallets = await walletsModel.find()
+    var walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
+    let addressSC = []
+    for (var i = 0; i < walletsArray.length; i++) {
+      const code = await web3.eth.getCode(walletsArray[i])
+      if (code.length > 2) {
+        addressSC.push(walletsArray[i])
+      }
+    }
+
+    return true
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 self.setBlockchain = async function () {
   try {
@@ -82,7 +98,7 @@ self.readStringFile = async function () {
   try {
     const data = await readFile(filePath, 'utf8')
     var array = data.split('\n')
-    for(var i =0; i < array.length; i++){
+    for (var i = 0; i < array.length; i++) {
       array[i] = array[i].toLowerCase()
     }
     return array
