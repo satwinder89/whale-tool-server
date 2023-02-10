@@ -18,6 +18,8 @@
     "mongoose": "^6.8.4",
     "node-schedule": "^2.1.1",
     "request": "^2.88.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.0",
     "web3": "^1.8.2"
   }
 }

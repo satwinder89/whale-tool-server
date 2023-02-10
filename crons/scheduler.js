@@ -1,5 +1,5 @@
 const schedule = require("node-schedule");
-const addressBalances = require("../ethereum/addressBalances");
+const addressBalances = require("../ethereum/alchemySDK");
 const blockTransactionModel = require("../database/models/blockTransactions");
 const transactionsModel = require("../database/models/transactions");
 var self = {}
@@ -32,3 +32,4 @@ self.deleteOldTransactions = function () {
 }
 
 module.exports = self
+

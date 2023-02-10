@@ -5,7 +5,6 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const blockTransactionsModel = require('../database/models/blockTransactions')
-const ethers = require('ethers')
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -215,8 +214,8 @@ self.getWhalesTransactions = async function () {
 self.checkTxList = async function () {
   try {
     let wallets = await walletsModel.find()
-    var walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
-    let blocksTransactions = await blockTransactionsModel.find()
+    const walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
+    const blocksTransactions = await blockTransactionsModel.find()
     console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions
       .flatMap(({ transactions }) => transactions)
@@ -269,14 +268,13 @@ self.checkTxList = async function () {
   }
 }
 
-self.webhook = async function () {
+self.blockNumber = async function () {
   try {
     alchemy.ws.on('block', async (blockNumber) => {
       try {
         console.log('The latest block number is', blockNumber)
         let block = await alchemy.core.getBlockWithTransactions(blockNumber)
         await blockTransactionsModel.create(block)
-        // console.log(block)
       } catch (e) {
         console.log(e)
       }
