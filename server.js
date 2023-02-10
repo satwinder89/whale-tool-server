@@ -32,10 +32,9 @@ app.use('/api', routes)
 const runMain = async () => {
   try {
     await database.connectDB()
-    // await ethereum.blockNumber()
-    // scheduler.checkTransactions()
-    // scheduler.deleteOldTransactions()
-    // await ethereum.checkTxList()
+    await ethereum.blockNumber()
+    scheduler.checkTransactions()
+    scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {
     console.log(error)
