@@ -20,7 +20,7 @@ const options = {
     //     bearerAuth: [],
     //   },
     // ],
-    servers: [{ url: 'http://localhost:5001'+ '/api' }],
+    servers: [{ url: process.env.HOST + '/api' }],
   },
   apis: ['./routes/routes.js'],
 }
