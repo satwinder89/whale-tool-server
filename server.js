@@ -33,6 +33,7 @@ const runMain = async () => {
   try {
     await database.connectDB()
     await ethereum.blockNumber()
+    scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.deleteOldTransactions()
     console.log('all is ok')

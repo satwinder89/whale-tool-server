@@ -1,13 +1,18 @@
 const transactionsModel = require('../database/models/transactions')
+const coinmarketcap = require('../coinmarketcap/price')
+const blockchainModel = require('../database/models/blockchain')
 
 module.exports = {
   getSwaps: async (req, res) => {
     const offset = Number(req.query.offset)
+    var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0;
     if (offset == undefined || offset == null) {
       return res
         .status(400)
         .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
     }
+    let ethPrice = await blockchainModel.findOne({ name: 'Ethereum' }).lean()
+    ethPrice = Number(gtValue/ethPrice.priceUSD)
     let startTime = Date.now()
     let transactions = await transactionsModel.aggregate([
       {
@@ -50,6 +55,12 @@ module.exports = {
             { valueAssetOut: { $ne: null } },
             { count: { $lte: 3 } },
             { count: { $gt: 1 } },
+            { $or: [
+              { $and: [{ assetIn: { $in: ['ETH', 'WETH'] } }, { valueAssetIn: { $gt: ethPrice } }] },
+              { $and: [{ assetOut: { $in: ['ETH', 'WETH'] } }, { valueAssetOut: { $gt: ethPrice } }] },
+              { $and: [{ assetIn: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetIn: { $gt: gtValue } }] },
+              { $and: [{ assetOut: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetOut: { $gt: gtValue } }] },
+            ]}
           ],
         },
       },
@@ -135,6 +146,12 @@ module.exports = {
             { valueAssetOut: { $ne: null } },
             { count: { $lte: 3 } },
             { count: { $gt: 1 } },
+            { $or: [
+              { $and: [{ assetIn: { $in: ['ETH', 'WETH'] } }, { valueAssetIn: { $gt: ethPrice } }] },
+              { $and: [{ assetOut: { $in: ['ETH', 'WETH'] } }, { valueAssetOut: { $gt: ethPrice } }] },
+              { $and: [{ assetIn: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetIn: { $gt: gtValue } }] },
+              { $and: [{ assetOut: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetOut: { $gt: gtValue } }] },
+            ]}
           ],
         },
       },
@@ -178,7 +195,6 @@ module.exports = {
         },
       },
     ])
-
     let endTime = Date.now() - startTime
     console.log('ended: ' + endTime)
     res.status(200).json({
