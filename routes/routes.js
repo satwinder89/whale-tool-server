@@ -1,13 +1,32 @@
 const router = require('express').Router()
 const transactionsController = require('../controllers/transactions')
-const walletsController = require("../controllers/wallet")
+const walletsController = require('../controllers/wallet')
+const tokenMiddleware = require('../utils/verifyToken')
 
 module.exports = () => {
-    /**
+  /**
+   * @swagger
+   * /login:
+   *   post:
+   *     summary: login with wallet address
+   *     parameters:
+   *       - name: address
+   *         description: wallet address
+   *         in: query
+   *         required: true
+   *         type: string
+   *     responses:
+   *       200:
+   *         description: Wallet create SUCCESS
+   */
+  router.post('/login', walletsController.login)
+  /**
    * @swagger
    * /wallets/create:
    *   post:
    *     summary: Create new wallet
+   *     security:
+   *       - bearerAuth: []
    *     parameters:
    *       - name: name
    *         description: wallet name
@@ -23,7 +42,11 @@ module.exports = () => {
    *       200:
    *         description: Wallet create SUCCESS
    */
-  router.post('/wallets/create', walletsController.createWallet)
+  router.post(
+    '/wallets/create',
+    tokenMiddleware.verifyToken,
+    walletsController.createWallet,
+  )
   /**
    * @swagger
    * /getSwaps:
@@ -41,12 +64,16 @@ module.exports = () => {
    *         description: volume swap maggiore di $
    *         in: query
    *         required: true
-   *         type: string 
+   *         type: string
    *     responses:
    *       200:
    *         description: swaps ritornati con successo
    */
-  router.get('/getSwaps', transactionsController.getSwaps)
+  router.get(
+    '/getSwaps',
+    tokenMiddleware.verifyToken,
+    transactionsController.getSwaps,
+  )
   /**
    * @swagger
    * /getNFTs:
@@ -64,6 +91,10 @@ module.exports = () => {
    *       200:
    *         description: NFTs swaps ritornati con successo
    */
-  router.get('/getNFTs', transactionsController.getNFTs)
+  router.get(
+    '/getNFTs',
+    tokenMiddleware.verifyToken,
+    transactionsController.getNFTs,
+  )
   return router
 }
