@@ -1,5 +1,4 @@
 const transactionsModel = require('../database/models/transactions')
-const coinmarketcap = require('../coinmarketcap/price')
 const blockchainModel = require('../database/models/blockchain')
 
 module.exports = {
