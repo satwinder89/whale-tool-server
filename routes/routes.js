@@ -49,6 +49,50 @@ module.exports = () => {
   )
   /**
    * @swagger
+   * /wallets:
+   *   get:
+   *     summary: ritorna i wallet ordinati per ETH descrescenti
+   *     security:
+   *        - bearerAuth: []
+   *     parameters:
+   *       - name: offset
+   *         description: offset tabella
+   *         in: query
+   *         required: true
+   *         type: string
+   *     responses:
+   *       200:
+   *         description: wallets ritornati con successo
+   */
+  router.get(
+    '/wallets',
+    tokenMiddleware.verifyToken,
+    walletsController.getWallets,
+  )
+  /**
+   * @swagger
+   * /wallets/{address}:
+   *   get:
+   *     summary: ritorna un wallet dato il suo address
+   *     security:
+   *        - bearerAuth: []
+   *     parameters:
+   *       - name: address
+   *         description: address del wallet
+   *         in: path
+   *         required: true
+   *         type: string
+   *     responses:
+   *       200:
+   *         description: wallet ritornato con successo
+   */
+  router.get(
+    '/wallets/:address',
+    tokenMiddleware.verifyToken,
+    walletsController.getWallet,
+  )
+  /**
+   * @swagger
    * /getSwaps:
    *   get:
    *     summary: ritorna tutti gli swaps
