@@ -10,7 +10,7 @@ module.exports = {
           message: 'address must be a string',
         })
       }
-      await walletModel.create({
+      let wallet = await walletModel.create({
         address: address.toLowerCase(),
         name: name,
         insertDate: Date.now(),
@@ -18,6 +18,7 @@ module.exports = {
       })
       res.status(200).json({
         message: 'SUCCESS',
+        wallet: wallet
       })
       return
     } catch (e) {
@@ -74,7 +75,7 @@ module.exports = {
       }
       const wallet = await walletModel.findOne({ address: address }).lean()
       if(!wallet) {
-        res.status(400).json({ 
+        res.status(200).json({ 
           message: "address not exist"
          })
          return
