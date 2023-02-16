@@ -4,12 +4,29 @@ const jwt = require('jsonwebtoken')
 module.exports = {
   createWallet: async (req, res) => {
     try {
-      const { address, name } = req.query
+      const { address } = req.query
       if (!(typeof address === 'string')) {
         res.status(402).json({
           message: 'address must be a string',
         })
       }
+      let lastWhale = await walletModel.aggregate([
+        { $match: { name: /^WHALE #\d+$/ } },
+        {
+          $project: {
+            name: 1,
+            number: { $toInt: { $substr: ['$name', 7, -1] } },
+          },
+        },
+        { $group: { _id: '$name', maxNumber: { $max: '$number' } } },
+        { $sort: { maxNumber: -1 } },
+        { $limit: 1 },
+        { $project: { _id: 0, name: '$_id', number: '$maxNumber' } },
+      ])
+
+      const str = lastWhale[0].name
+      const parts = str.split('#')
+      const name = "WHALE #" + (parseInt(parts[1]) +1)
       let wallet = await walletModel.create({
         address: address.toLowerCase(),
         name: name,
@@ -18,7 +35,7 @@ module.exports = {
       })
       res.status(200).json({
         message: 'SUCCESS',
-        wallet: wallet
+        wallet: wallet,
       })
       return
     } catch (e) {
@@ -55,13 +72,18 @@ module.exports = {
           .status(400)
           .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
       }
-      const wallets = await walletModel.find().sort({ ETH: -1 }).skip(offset * 32).limit(32).lean();
+      const wallets = await walletModel
+        .find()
+        .sort({ ETH: -1 })
+        .skip(offset * 32)
+        .limit(32)
+        .lean()
       const countWallets = await walletModel.countDocuments()
       res.status(200).json({
         wallets: wallets,
-        totWallets: countWallets
+        totWallets: countWallets,
       })
-    }catch(e){
+    } catch (e) {
       console.log(e)
     }
   },
@@ -74,16 +96,16 @@ module.exports = {
         })
       }
       const wallet = await walletModel.findOne({ address: address }).lean()
-      if(!wallet) {
-        res.status(200).json({ 
-          message: "address not exist"
-         })
-         return
+      if (!wallet) {
+        res.status(200).json({
+          message: 'address not exist',
+        })
+        return
       }
       res.status(200).json(wallet)
       return
-    }catch(e){
+    } catch (e) {
       console.log(e)
     }
-  }
+  },
 }

@@ -28,11 +28,6 @@ module.exports = () => {
    *     security:
    *       - bearerAuth: []
    *     parameters:
-   *       - name: name
-   *         description: wallet name
-   *         in: query
-   *         required: true
-   *         type: string
    *       - name: address
    *         description: wallet address
    *         in: query
