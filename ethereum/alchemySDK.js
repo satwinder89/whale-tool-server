@@ -315,7 +315,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
                 Math.pow(10, metadata.decimals)
               sendedTx.transfers[j].value = Number(balance.toFixed(10))
               sendedTx.transfers[j].asset = metadata.name
-              sendedTxResult.push({
+              let resultObject = {
                 uniqueId: sendedTx.transfers[j].uniqueId,
                 type: 'sended',
                 address: sendedTx.transfers[j].rawContract.address,
@@ -328,7 +328,11 @@ self.getSenderTransactions = async function (from, blockNumber) {
                 date: new Date(
                   sendedTx.transfers[j].metadata.blockTimestamp,
                 ).getTime(),
-              })
+              }
+              if(sendedTx.transfers[j].tokenId !== undefined) {
+                resultObject.tokenId = parseInt(sendedTx.transfers[j].tokenId, 16)
+              }
+              sendedTxResult.push(resultObject)
             }
           } catch (e) {
             console.log(e)
@@ -338,7 +342,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
           if (!sendedTx.transfers[j].rawContract.address) {
             sendedTx.transfers[j].rawContract.address = 'ETH'
           }
-          sendedTxResult.push({
+          let resultObject = {
             uniqueId: sendedTx.transfers[j].uniqueId,
             type: 'sended',
             address: sendedTx.transfers[j]?.rawContract.address,
@@ -351,7 +355,11 @@ self.getSenderTransactions = async function (from, blockNumber) {
             date: new Date(
               sendedTx.transfers[j].metadata.blockTimestamp,
             ).getTime(),
-          })
+          }
+          if(sendedTx.transfers[j].tokenId !== undefined) {
+            resultObject.tokenId = parseInt(sendedTx.transfers[j].tokenId, 16)
+          }
+          sendedTxResult.push(resultObject)
         }
       }
     }
@@ -383,6 +391,9 @@ self.getReceverTransactions = async function (to, blockNumber) {
     let recevedTxResult = []
     if (recevedTx.transfers.length != 0) {
       for (let j = 0; j < recevedTx.transfers.length; j++) {
+        let testmetadata = await alchemy.core.getTokenMetadata(
+          recevedTx.transfers[j].rawContract.address,
+        )
         if (!recevedTx.transfers[j].asset) {
           try {
             let metadata
@@ -395,7 +406,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
                 Math.pow(10, metadata.decimals)
               recevedTx.transfers[j].value = Number(balance.toFixed(10))
               recevedTx.transfers[j].asset = metadata.name
-              recevedTxResult.push({
+              let resultObject = {
                 uniqueId: recevedTx.transfers[j].uniqueId,
                 type: 'receved',
                 address: recevedTx.transfers[j].rawContract.address,
@@ -407,8 +418,12 @@ self.getReceverTransactions = async function (to, blockNumber) {
                 value: recevedTx.transfers[j].value,
                 date: new Date(
                   recevedTx.transfers[j].metadata.blockTimestamp,
-                ).getTime(),
-              })
+                ).getTime()
+              }
+              if(recevedTx.transfers[j].tokenId !== undefined) {
+                resultObject.tokenId = parseInt(recevedTx.transfers[j].tokenId, 16)
+              }
+              recevedTxResult.push(resultObject)
             }
           } catch (e) {
             console.log(e)
@@ -418,7 +433,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
           if (!recevedTx.transfers[j].rawContract.address) {
             recevedTx.transfers[j].rawContract.address = 'ETH'
           }
-          recevedTxResult.push({
+          let resultObject = {
             uniqueId: recevedTx.transfers[j].uniqueId,
             type: 'receved',
             address: recevedTx.transfers[j]?.rawContract.address,
@@ -431,7 +446,11 @@ self.getReceverTransactions = async function (to, blockNumber) {
             date: new Date(
               recevedTx.transfers[j].metadata.blockTimestamp,
             ).getTime(),
-          })
+          }
+          if(recevedTx.transfers[j].tokenId !== undefined) {
+            resultObject.tokenId = parseInt(recevedTx.transfers[j].tokenId, 16)
+          }
+          recevedTxResult.push(resultObject)
         }
       }
     }

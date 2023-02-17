@@ -4,14 +4,14 @@ const blockchainModel = require('../database/models/blockchain')
 module.exports = {
   getSwaps: async (req, res) => {
     const offset = Number(req.query.offset)
-    var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0;
+    var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0
     if (offset == undefined || offset == null) {
       return res
         .status(400)
         .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
     }
     let ethPrice = await blockchainModel.findOne({ name: 'Ethereum' }).lean()
-    ethPrice = Number(gtValue/ethPrice.priceUSD)
+    ethPrice = Number(gtValue / ethPrice.priceUSD)
     let startTime = Date.now()
     let transactions = await transactionsModel.aggregate([
       {
@@ -54,12 +54,34 @@ module.exports = {
             { valueAssetOut: { $ne: null } },
             { count: { $lte: 3 } },
             { count: { $gt: 1 } },
-            { $or: [
-              { $and: [{ assetIn: { $in: ['ETH', 'WETH'] } }, { valueAssetIn: { $gt: ethPrice } }] },
-              { $and: [{ assetOut: { $in: ['ETH', 'WETH'] } }, { valueAssetOut: { $gt: ethPrice } }] },
-              { $and: [{ assetIn: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetIn: { $gt: gtValue } }] },
-              { $and: [{ assetOut: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetOut: { $gt: gtValue } }] },
-            ]}
+            {
+              $or: [
+                {
+                  $and: [
+                    { assetIn: { $in: ['ETH', 'WETH'] } },
+                    { valueAssetIn: { $gt: ethPrice } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetOut: { $in: ['ETH', 'WETH'] } },
+                    { valueAssetOut: { $gt: ethPrice } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
+                    { valueAssetIn: { $gt: gtValue } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
+                    { valueAssetOut: { $gt: gtValue } },
+                  ],
+                },
+              ],
+            },
           ],
         },
       },
@@ -145,12 +167,34 @@ module.exports = {
             { valueAssetOut: { $ne: null } },
             { count: { $lte: 3 } },
             { count: { $gt: 1 } },
-            { $or: [
-              { $and: [{ assetIn: { $in: ['ETH', 'WETH'] } }, { valueAssetIn: { $gt: ethPrice } }] },
-              { $and: [{ assetOut: { $in: ['ETH', 'WETH'] } }, { valueAssetOut: { $gt: ethPrice } }] },
-              { $and: [{ assetIn: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetIn: { $gt: gtValue } }] },
-              { $and: [{ assetOut: { $in: ['USDT', 'USDC', 'DAI'] } }, { valueAssetOut: { $gt: gtValue } }] },
-            ]}
+            {
+              $or: [
+                {
+                  $and: [
+                    { assetIn: { $in: ['ETH', 'WETH'] } },
+                    { valueAssetIn: { $gt: ethPrice } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetOut: { $in: ['ETH', 'WETH'] } },
+                    { valueAssetOut: { $gt: ethPrice } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
+                    { valueAssetIn: { $gt: gtValue } },
+                  ],
+                },
+                {
+                  $and: [
+                    { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
+                    { valueAssetOut: { $gt: gtValue } },
+                  ],
+                },
+              ],
+            },
           ],
         },
       },
@@ -228,6 +272,7 @@ module.exports = {
             valueAssetOut: { $last: '$value' },
             categories: { $push: '$category' },
             timestamp: { $first: '$date' },
+            tokenId: { $first: '$tokenId' },
           },
         },
         {
@@ -313,6 +358,7 @@ module.exports = {
             valueAssetOut: { $last: '$value' },
             categories: { $push: '$category' },
             timestamp: { $first: '$date' },
+            tokenId: { $first: '$tokenId' },
           },
         },
         {

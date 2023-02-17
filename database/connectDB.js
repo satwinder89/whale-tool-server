@@ -1,15 +1,12 @@
-// db.js
 const mongoose = require("mongoose");
-const url =
-  'mongodb+srv://whaletools:Whaletool123@whaledb.katkzqq.mongodb.net/'
-const dbName = 'whaletools'
+require('dotenv').config()
 
 module.exports = {
   connectDB: async function () {
     try {
       //MONGOOSE DATABASE CONNECTION
       mongoose.Promise = global.Promise;
-      mongoose.connect(url + dbName, {
+      mongoose.connect(process.env.DATABASE, {
         useNewUrlParser: true,
         useUnifiedTopology: true
       });
