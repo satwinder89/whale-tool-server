@@ -257,7 +257,7 @@ module.exports = {
       }
       let startTime = Date.now()
 
-      let transactions = await transactionsModel.aggregate([
+      const transactions = await transactionsModel.aggregate([
         {
           $group: {
             _id: '$hash',
@@ -272,7 +272,7 @@ module.exports = {
             valueAssetOut: { $last: '$value' },
             categories: { $push: '$category' },
             timestamp: { $first: '$date' },
-            tokenId: { $first: '$tokenId' },
+            tokenId: { $push: '$tokenId' },
           },
         },
         {
@@ -288,6 +288,7 @@ module.exports = {
             valueAssetOut: 1,
             categories: 1,
             timestamp: 1,
+            tokenId: 1,
             comparisonResult: { $strcasecmp: ['$addressIn', '$addressOut'] },
             mint: 1,
           },
@@ -324,6 +325,7 @@ module.exports = {
             assetIn: 1,
             addressIn: 1,
             assetOut: 1,
+            tokenId: 1,
             addressOut: 1,
             valueAssetIn: { $toDouble: '$valueAssetIn' },
             valueAssetOut: { $toDouble: '$valueAssetOut' },
@@ -333,7 +335,9 @@ module.exports = {
           },
         },
         {
-          $sort: { timestamp: -1 },
+          $sort: {
+            timestamp: -1,
+          },
         },
         {
           $skip: offset * 32,
@@ -343,7 +347,7 @@ module.exports = {
         },
       ])
 
-      let countTransactions = await transactionsModel.aggregate([
+      const countTransactions = await transactionsModel.aggregate([
         {
           $group: {
             _id: '$hash',
@@ -358,7 +362,7 @@ module.exports = {
             valueAssetOut: { $last: '$value' },
             categories: { $push: '$category' },
             timestamp: { $first: '$date' },
-            tokenId: { $first: '$tokenId' },
+            tokenId: { $push: '$tokenId' },
           },
         },
         {
