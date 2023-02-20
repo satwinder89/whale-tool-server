@@ -331,9 +331,9 @@ self.getSenderTransactions = async function (from, blockNumber) {
                 ).getTime(),
               }
               if(sendedTx.transfers[j].erc721TokenId) {
-                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16)
+                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16).toString()
               } else if (sendedTx.transfers[j].erc1155Metadata) {
-                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16).toString()
                 resultObject.value = parseInt(sendedTx.transfers[j].erc1155Metadata[0].value, 16)
               }
               sendedTxResult.push(resultObject)
@@ -361,9 +361,9 @@ self.getSenderTransactions = async function (from, blockNumber) {
             ).getTime(),
           }
           if(sendedTx.transfers[j].erc721TokenId) {
-            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16)
+            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16).toString()
           } else if (sendedTx.transfers[j].erc1155Metadata) {
-            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16).toString()
             resultObject.value = parseInt(sendedTx.transfers[j].erc1155Metadata[0].value, 16)
           }
           sendedTxResult.push(resultObject)
@@ -428,9 +428,9 @@ self.getReceverTransactions = async function (to, blockNumber) {
                 ).getTime()
               }
               if(recevedTx.transfers[j].erc721TokenId) {
-                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16)
+                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16).toString()
               } else if (recevedTx.transfers[j].erc1155Metadata) {
-                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16).toString()
                 resultObject.value = parseInt(recevedTx.transfers[j].erc1155Metadata[0].value, 16)
               }
               recevedTxResult.push(resultObject)
@@ -458,9 +458,9 @@ self.getReceverTransactions = async function (to, blockNumber) {
             ).getTime(),
           }
           if(recevedTx.transfers[j].erc721TokenId) {
-            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16)
+            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16).toString()
           } else if (recevedTx.transfers[j].erc1155Metadata) {
-            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16).toString()
             resultObject.value = parseInt(recevedTx.transfers[j].erc1155Metadata[0].value, 16)
           }
           recevedTxResult.push(resultObject)
