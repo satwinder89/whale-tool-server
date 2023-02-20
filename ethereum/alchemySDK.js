@@ -5,6 +5,7 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const blockTransactionsModel = require('../database/models/blockTransactions')
+const { id } = require('ethers/lib/utils')
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -329,8 +330,11 @@ self.getSenderTransactions = async function (from, blockNumber) {
                   sendedTx.transfers[j].metadata.blockTimestamp,
                 ).getTime(),
               }
-              if(sendedTx.transfers[j].tokenId !== undefined) {
-                resultObject.tokenId = parseInt(sendedTx.transfers[j].tokenId, 16)
+              if(sendedTx.transfers[j].erc721TokenId) {
+                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16)
+              } else if (sendedTx.transfers[j].erc1155Metadata) {
+                resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+                resultObject.value = parseInt(sendedTx.transfers[j].erc1155Metadata[0].value, 16)
               }
               sendedTxResult.push(resultObject)
             }
@@ -356,8 +360,11 @@ self.getSenderTransactions = async function (from, blockNumber) {
               sendedTx.transfers[j].metadata.blockTimestamp,
             ).getTime(),
           }
-          if(sendedTx.transfers[j].tokenId !== undefined) {
-            resultObject.tokenId = parseInt(sendedTx.transfers[j].tokenId, 16)
+          if(sendedTx.transfers[j].erc721TokenId) {
+            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc721TokenId, 16)
+          } else if (sendedTx.transfers[j].erc1155Metadata) {
+            resultObject.tokenId = parseInt(sendedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+            resultObject.value = parseInt(sendedTx.transfers[j].erc1155Metadata[0].value, 16)
           }
           sendedTxResult.push(resultObject)
         }
@@ -420,8 +427,11 @@ self.getReceverTransactions = async function (to, blockNumber) {
                   recevedTx.transfers[j].metadata.blockTimestamp,
                 ).getTime()
               }
-              if(recevedTx.transfers[j].tokenId !== undefined) {
-                resultObject.tokenId = parseInt(recevedTx.transfers[j].tokenId, 16)
+              if(recevedTx.transfers[j].erc721TokenId) {
+                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16)
+              } else if (recevedTx.transfers[j].erc1155Metadata) {
+                resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+                resultObject.value = parseInt(recevedTx.transfers[j].erc1155Metadata[0].value, 16)
               }
               recevedTxResult.push(resultObject)
             }
@@ -447,8 +457,11 @@ self.getReceverTransactions = async function (to, blockNumber) {
               recevedTx.transfers[j].metadata.blockTimestamp,
             ).getTime(),
           }
-          if(recevedTx.transfers[j].tokenId !== undefined) {
-            resultObject.tokenId = parseInt(recevedTx.transfers[j].tokenId, 16)
+          if(recevedTx.transfers[j].erc721TokenId) {
+            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc721TokenId, 16)
+          } else if (recevedTx.transfers[j].erc1155Metadata) {
+            resultObject.tokenId = parseInt(recevedTx.transfers[j].erc1155Metadata[0].tokenId, 16)
+            resultObject.value = parseInt(recevedTx.transfers[j].erc1155Metadata[0].value, 16)
           }
           recevedTxResult.push(resultObject)
         }
