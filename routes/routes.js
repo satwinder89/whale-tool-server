@@ -126,6 +126,11 @@ module.exports = () => {
    *         in: query
    *         required: true
    *         type: string
+   *       - name: gtValue
+   *         description: volume swap maggiore di $
+   *         in: query
+   *         required: true
+   *         type: string
    *     responses:
    *       200:
    *         description: NFTs swaps ritornati con successo

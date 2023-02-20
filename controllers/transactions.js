@@ -250,13 +250,15 @@ module.exports = {
   getNFTs: async (req, res) => {
     try {
       const offset = Number(req.query.offset)
+      var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0
       if (offset == undefined || offset == null) {
         return res
           .status(400)
           .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
       }
+      let ethPrice = await blockchainModel.findOne({ name: 'Ethereum' }).lean()
+      ethPrice = Number(gtValue / ethPrice.priceUSD)
       let startTime = Date.now()
-
       const transactions = await transactionsModel.aggregate([
         {
           $group: {
@@ -300,6 +302,34 @@ module.exports = {
               { count: { $lte: 3 } },
               { count: { $gt: 1 } },
               { comparisonResult: { $ne: 0 } },
+              {
+                $or: [
+                  {
+                    $and: [
+                      { assetIn: { $in: ['ETH', 'WETH'] } },
+                      { valueAssetIn: { $gt: ethPrice } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetOut: { $in: ['ETH', 'WETH'] } },
+                      { valueAssetOut: { $gt: ethPrice } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
+                      { valueAssetIn: { $gt: gtValue } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
+                      { valueAssetOut: { $gt: gtValue } },
+                    ],
+                  },
+                ],
+              },
             ],
           },
         },
@@ -389,6 +419,34 @@ module.exports = {
               { count: { $lte: 3 } },
               { count: { $gt: 1 } },
               { comparisonResult: { $ne: 0 } },
+              {
+                $or: [
+                  {
+                    $and: [
+                      { assetIn: { $in: ['ETH', 'WETH'] } },
+                      { valueAssetIn: { $gt: ethPrice } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetOut: { $in: ['ETH', 'WETH'] } },
+                      { valueAssetOut: { $gt: ethPrice } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
+                      { valueAssetIn: { $gt: gtValue } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
+                      { valueAssetOut: { $gt: gtValue } },
+                    ],
+                  },
+                ],
+              },
             ],
           },
         },
