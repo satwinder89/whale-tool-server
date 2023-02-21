@@ -102,12 +102,22 @@ module.exports = () => {
    *       - name: gtValue
    *         description: volume swap maggiore di $
    *         in: query
-   *         required: true
+   *         required: false
    *         type: string
    *       - name: ltValue
    *         description: volume swap minore di $
    *         in: query
-   *         required: true
+   *         required: false
+   *         type: string
+   *       - name: address
+   *         description: address della Whale
+   *         in: query
+   *         required: false
+   *         type: string
+   *       - name: contract
+   *         description: address del contratto
+   *         in: query
+   *         required: false
    *         type: string
    *     responses:
    *       200:
@@ -134,12 +144,22 @@ module.exports = () => {
    *       - name: gtValue
    *         description: volume swap maggiore di $
    *         in: query
-   *         required: true
+   *         required: false
    *         type: string
    *       - name: ltValue
    *         description: volume swap minore di $
    *         in: query
-   *         required: true
+   *         required: false
+   *         type: string
+   *       - name: address
+   *         description: address della Whale
+   *         in: query
+   *         required: false
+   *         type: string
+   *       - name: contract
+   *         description: address del contratto
+   *         in: query
+   *         required: false
    *         type: string
    *     responses:
    *       200:
