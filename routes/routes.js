@@ -104,6 +104,11 @@ module.exports = () => {
    *         in: query
    *         required: true
    *         type: string
+   *       - name: ltValue
+   *         description: volume swap minore di $
+   *         in: query
+   *         required: true
+   *         type: string
    *     responses:
    *       200:
    *         description: swaps ritornati con successo
@@ -128,6 +133,11 @@ module.exports = () => {
    *         type: string
    *       - name: gtValue
    *         description: volume swap maggiore di $
+   *         in: query
+   *         required: true
+   *         type: string
+   *       - name: ltValue
+   *         description: volume swap minore di $
    *         in: query
    *         required: true
    *         type: string

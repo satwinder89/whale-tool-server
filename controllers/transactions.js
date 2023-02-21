@@ -5,13 +5,18 @@ module.exports = {
   getSwaps: async (req, res) => {
     const offset = Number(req.query.offset)
     var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0
+    var ltValue = req.query.ltValue ? Number(req.query.ltValue) : 0
     if (offset == undefined || offset == null) {
       return res
         .status(400)
         .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
     }
     let ethPrice = await blockchainModel.findOne({ name: 'Ethereum' }).lean()
-    ethPrice = Number(gtValue / ethPrice.priceUSD)
+    let gtEthPrice = Number(gtValue / ethPrice.priceUSD)
+    let ltEthPrice = 0
+    if(ltValue !== 0){
+      ltEthPrice = Number(ltValue / ethPrice.priceUSD)
+    }
     let startTime = Date.now()
     let transactions = await transactionsModel.aggregate([
       {
@@ -59,25 +64,29 @@ module.exports = {
                 {
                   $and: [
                     { assetIn: { $in: ['ETH', 'WETH'] } },
-                    { valueAssetIn: { $gt: ethPrice } },
+                    { valueAssetIn: { $gte: gtEthPrice } },
+                    ltEthPrice !== 0 ? { valueAssetIn: { $lte: ltEthPrice } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetOut: { $in: ['ETH', 'WETH'] } },
-                    { valueAssetOut: { $gt: ethPrice } },
+                    { valueAssetOut: { $gte: gtEthPrice } },
+                    ltEthPrice !== 0 ? { valueAssetOut: { $lte: ltEthPrice } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
-                    { valueAssetIn: { $gt: gtValue } },
+                    { valueAssetIn: { $gte: gtValue } },
+                    ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
-                    { valueAssetOut: { $gt: gtValue } },
+                    { valueAssetOut: { $gte: gtValue } },
+                    ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {}
                   ],
                 },
               ],
@@ -172,25 +181,29 @@ module.exports = {
                 {
                   $and: [
                     { assetIn: { $in: ['ETH', 'WETH'] } },
-                    { valueAssetIn: { $gt: ethPrice } },
+                    { valueAssetIn: { $gte: gtEthPrice } },
+                    ltEthPrice !== 0 ? { valueAssetIn: { $lte: ltEthPrice } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetOut: { $in: ['ETH', 'WETH'] } },
-                    { valueAssetOut: { $gt: ethPrice } },
+                    { valueAssetOut: { $gte: gtEthPrice } },
+                    ltEthPrice !== 0 ? { valueAssetOut: { $lte: ltEthPrice } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
-                    { valueAssetIn: { $gt: gtValue } },
+                    { valueAssetIn: { $gte: gtValue } },
+                    ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {}
                   ],
                 },
                 {
                   $and: [
                     { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
-                    { valueAssetOut: { $gt: gtValue } },
+                    { valueAssetOut: { $gte: gtValue } },
+                    ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {}
                   ],
                 },
               ],
@@ -251,13 +264,18 @@ module.exports = {
     try {
       const offset = Number(req.query.offset)
       var gtValue = req.query.gtValue ? Number(req.query.gtValue) : 0
+      var ltValue = req.query.ltValue ? Number(req.query.ltValue) : 0
       if (offset == undefined || offset == null) {
         return res
           .status(400)
           .json({ message: 'FAIL', error: 'WRONG_OFFSET_FORMAT' })
       }
       let ethPrice = await blockchainModel.findOne({ name: 'Ethereum' }).lean()
-      ethPrice = Number(gtValue / ethPrice.priceUSD)
+      let gtEthPrice = Number(gtValue / ethPrice.priceUSD)
+      let ltEthPrice = 0
+      if(ltValue !== 0){
+        ltEthPrice = Number(ltValue / ethPrice.priceUSD)
+      }
       let startTime = Date.now()
       const transactions = await transactionsModel.aggregate([
         {
@@ -290,7 +308,6 @@ module.exports = {
             valueAssetOut: 1,
             categories: 1,
             timestamp: 1,
-            tokenId: 1,
             comparisonResult: { $strcasecmp: ['$addressIn', '$addressOut'] },
             mint: 1,
           },
@@ -307,25 +324,29 @@ module.exports = {
                   {
                     $and: [
                       { assetIn: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetIn: { $gt: ethPrice } },
+                      { valueAssetIn: { $gt: gtEthPrice } },
+                      ltEthPrice !== 0 ? { valueAssetIn: { $lte: ltEthPrice } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetOut: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetOut: { $gt: ethPrice } },
+                      { valueAssetOut: { $gt: gtEthPrice } },
+                      ltEthPrice !== 0 ? { valueAssetOut: { $lte: ltEthPrice } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
                       { valueAssetIn: { $gt: gtValue } },
+                      ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
                       { valueAssetOut: { $gt: gtValue } },
+                      ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {}
                     ],
                   },
                 ],
@@ -424,25 +445,29 @@ module.exports = {
                   {
                     $and: [
                       { assetIn: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetIn: { $gt: ethPrice } },
+                      { valueAssetIn: { $gt: gtEthPrice } },
+                      ltEthPrice !== 0 ? { valueAssetIn: { $lte: ltEthPrice } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetOut: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetOut: { $gt: ethPrice } },
+                      { valueAssetOut: { $gt: gtEthPrice } },
+                      ltEthPrice !== 0 ? { valueAssetOut: { $lte: ltEthPrice } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
                       { valueAssetIn: { $gt: gtValue } },
+                      ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {}
                     ],
                   },
                   {
                     $and: [
                       { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
                       { valueAssetOut: { $gt: gtValue } },
+                      ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {}
                     ],
                   },
                 ],
@@ -472,6 +497,7 @@ module.exports = {
             assetIn: 1,
             addressIn: 1,
             assetOut: 1,
+            tokenId: 1,
             addressOut: 1,
             valueAssetIn: { $toDouble: '$valueAssetIn' },
             valueAssetOut: { $toDouble: '$valueAssetOut' },
@@ -481,7 +507,9 @@ module.exports = {
           },
         },
         {
-          $sort: { timestamp: -1 },
+          $sort: {
+            timestamp: -1,
+          },
         },
         {
           $group: {
