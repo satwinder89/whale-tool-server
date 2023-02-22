@@ -232,6 +232,7 @@ module.exports = {
             timestamp: 1,
             comparisonResult: { $strcasecmp: ['$addressIn', '$addressOut'] },
             mint: 1,
+            tokenId: 1
           },
         },
         {
@@ -325,6 +326,7 @@ module.exports = {
             categories: 1,
             timestamp: 1,
             mint: 1,
+            tokenId: 1
           },
         },
       )

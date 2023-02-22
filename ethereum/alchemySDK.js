@@ -398,9 +398,6 @@ self.getReceverTransactions = async function (to, blockNumber) {
     let recevedTxResult = []
     if (recevedTx.transfers.length != 0) {
       for (let j = 0; j < recevedTx.transfers.length; j++) {
-        let testmetadata = await alchemy.core.getTokenMetadata(
-          recevedTx.transfers[j].rawContract.address,
-        )
         if (!recevedTx.transfers[j].asset) {
           try {
             let metadata
