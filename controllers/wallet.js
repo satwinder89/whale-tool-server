@@ -107,7 +107,7 @@ module.exports = {
       const walletTokenPrices = await tokensModel
         .find({ address: { $in: contractAddresses } })
         .lean()
-      if(!walletTokenPrices) {
+      if(walletTokenPrices.length == 0) {
         res.status(403).json({
           message: 'No token price found',
         })
