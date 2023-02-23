@@ -31,6 +31,7 @@ const runMain = async () => {
   try {
     await database.connectDB()
     await alchemySDK.updateWallet()
+    await alchemySDK.updateTokensPrice()
     // await ethereum.blockNumber()
     // scheduler.updateEthToUSDPrice()
     // scheduler.checkTransactions()

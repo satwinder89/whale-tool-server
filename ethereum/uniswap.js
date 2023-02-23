@@ -48,40 +48,13 @@ self.getTokenPrice = async function (tokenAddress, symbol) {
         continue
       }
     }
-    // let tokenPriceETH = await uniswapContract.methods
-    //   .getAmountsOut(web3.utils.toWei('1'), [tokenAddress, address.ETH])
-    //   .call()
-    // let tokenPriceUSDT = await uniswapContract.methods
-    //   .getAmountsOut(web3.utils.toWei('1'), [tokenAddress, address.USDT])
-    //   .call()
-    // let tokenPriceUSDC = await uniswapContract.methods
-    //   .getAmountsOut(web3.utils.toWei('1'), [tokenAddress, address.USDC])
-    //   .call()
-    // let tokenPriceDAI = await uniswapContract.methods
-    //   .getAmountsOut(web3.utils.toWei('1'), [tokenAddress, address.DAI])
-    //   .call()
-    // tokenPriceETH = Number(web3.utils.fromWei(tokenPriceETH[1], 'ether'))
-    // tokenPriceUSDT = tokenPriceUSDT[1] / 1000000
-    // tokenPriceUSDC = tokenPriceUSDC[1] / 1000000
-    // tokenPriceDAI = tokenPriceDAI[1] / 1000000000000000000
-    // return {
-    //   address: tokenAddress,
-    //   priceETH: tokenPriceETH,
-    //   priceUSDT: tokenPriceUSDT,
-    //   priceUSDC: tokenPriceUSDC,
-    //   priceDAI: tokenPriceDAI,
-    // }
-    // console.log(
-    //   `Prezzo di 1 ETH in ${symbol}: ${web3.utils.fromWei(
-    //     tokenPriceETH[1],
-    //     'ether',
-    //   )} ${symbol}`,
-    // )
+    return {
+      pair: "No Pair found",
+      value: null
+    }
   } catch (e) {
     console.log(e)
   }
 }
-;('1000000000000000000')
-;('4209164877973598')
 
 module.exports = self

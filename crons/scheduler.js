@@ -8,8 +8,9 @@ const blockchainModel = require('../database/models/blockchain')
 var self = {}
 
 self.syncTransactions = function () {
-  schedule.scheduleJob('*/7 * * * *', async function () {
-    await addressBalances.getWhalesTransactions()
+  schedule.scheduleJob('*/30 * * * *', async function () {
+    await addressBalances.updateWallet()
+    await addressBalances.updateTokensPrice()
   })
 }
 

@@ -5,6 +5,7 @@ const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
 const blockchainsModel = require('../database/models/blockchain')
 const blockTransactionsModel = require('../database/models/blockTransactions')
+const tokensModel = require('../database/models/tokens')
 const coinmarketcap = require('../coinmarketcap/price')
 const uniswap = require('./uniswap')
 
@@ -35,40 +36,60 @@ self.blockNumber = async function () {
 self.updateWallet = async function () {
   try {
     let wallets = await walletsModel.find({ updated: false }).lean()
-    for(let i = 0; i < wallets.length; i++){
-      let ethBalance = await alchemy.core.getBalance(wallets[i].address, 'latest')
+    for (let i = 0; i < wallets.length; i++) {
+      let ethBalance = await alchemy.core.getBalance(
+        wallets[i].address,
+        'latest',
+      )
       let eth = Number(ethBalance._hex) / Math.pow(10, 18) //calculate che ETH from WEI
-      const ethPrice = await coinmarketcap.getEthPriceInUSD()
       let tokens = []
       const balances = await alchemy.core.getTokenBalances(wallets[i].address)
       const nonZeroBalances = balances.tokenBalances.filter((token) => {
-        return token.tokenBalance !== '0'
+        return Number(token.tokenBalance) > 0
       })
+      const contractAddresses = nonZeroBalances.map(
+        (obj) => obj.contractAddress,
+      )
+      let tokensDB = await tokensModel
+        .find({
+          address: { $in: contractAddresses },
+          symbol: { $ne: 'UNI-V2' },
+        })
+        .lean()
+      const tokensDBAddress = tokensDB.map((obj) => obj.address)
+      // Unire gli array e rimuovere eventuali duplicati
+      const unione = [...new Set([...contractAddresses, ...tokensDBAddress])]
+      // Filtrare le stringhe presenti in un solo array
+      const newTokens = unione.filter(
+        (stringa) =>
+          !contractAddresses.includes(stringa) ||
+          !tokensDBAddress.includes(stringa),
+      )
+      await self.createTokens(newTokens)
       for (let token of nonZeroBalances) {
-        let balance = token.tokenBalance
-        let metadata = null
-        try {
-          metadata = await alchemy.core.getTokenMetadata(token.contractAddress)
-        } catch (e) {
-          console.log(e)
-          continue
-        }
-        // let tokenInUSD = await coinmarketcap.getTokenPriceInUSD(token.contractAddress)
-        if (/^UNI.+/.test(metadata.symbol)) {
-          token.contractAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'.toLowerCase()
-        }
-        
-        let tokenInETH = await uniswap.getTokenPrice(token.contractAddress, metadata.symbol)
-        balance = balance / Math.pow(10, metadata.decimals)
-        balance = balance.toFixed(10)
+        // let balance = token.tokenBalance
+        // let metadata = null
+        // try {
+        //   metadata = await alchemy.core.getTokenMetadata(token.contractAddress)
+        // } catch (e) {
+        //   console.log(e)
+        //   continue
+        // }
+
+        // let tokenInETH = await uniswap.getTokenPrice(
+        //   token.contractAddress,
+        //   metadata.symbol,
+        // )
+        // balance = balance / Math.pow(10, metadata.decimals)
+        // balance = balance.toFixed(10)
         tokens.push({
           address: token.contractAddress,
-          name: metadata.name,
-          symbol: metadata.symbol,
-          balance: balance,
-          decimal: metadata.decimals,
-          logo: metadata.logo,
-          inETH: tokenInETH
+          // name: metadata.name,
+          // symbol: metadata.symbol,
+          balance: token.tokenBalance,
+          // decimal: metadata.decimals,
+          // logo: metadata.logo,
+          // inETH: tokenInETH,
         })
       }
       await walletsModel.findOneAndUpdate(
@@ -76,13 +97,77 @@ self.updateWallet = async function () {
         {
           updated: true,
           updateDate: Date.now(),
-          $set: { ETH: eth, ETHinUSD: ethPrice, tokens: tokens },
+          $set: { ETH: eth, tokens: tokens },
         },
         { upsert: true, new: true },
       )
     }
 
     return true
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.createTokens = async function (newTokens) {
+  try {
+    let tokens = []
+    for (var i = 0; i < newTokens.length; i++) {
+      try {
+        const metadata = await alchemy.core.getTokenMetadata(newTokens[i])
+        let tokenPrice = await uniswap.getTokenPrice(
+          newTokens[i],
+          metadata.symbol,
+        )
+        tokens.push({
+          address: newTokens[i],
+          name: metadata.name,
+          symbol: metadata.symbol,
+          decimals: metadata.decimals,
+          logo: metadata.logo,
+          price: tokenPrice,
+          lastUpdate: Date.now(),
+        })
+      } catch (e) {
+        console.log(e)
+        continue
+      }
+    }
+    await tokensModel.insertMany(tokens)
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.updateTokensPrice = async function () {
+  try {
+    const tokensDB = await tokensModel.find().lean()
+    var tokens = []
+    for (var i = 0; i < tokens.length; i++) {
+      try {
+        const metadata = await alchemy.core.getTokenMetadata(
+          tokensDB[i].address,
+        )
+        let tokenPrice = await uniswap.getTokenPrice(
+          tokensDB[i].address,
+          metadata.symbol,
+        )
+        tokens.push({
+          address: tokensDB[i].address,
+          name: metadata.name,
+          symbol: metadata.symbol,
+          decimals: metadata.decimals,
+          logo: metadata.logo,
+          price: tokenPrice,
+          lastUpdate: Date.now(),
+        })
+      } catch (e) {
+        console.log(e)
+        continue
+      }
+    }
+    await tokensModel.deleteMany()
+    await tokensModel.insertMany(tokens)
   } catch (e) {
     console.log(e)
   }
