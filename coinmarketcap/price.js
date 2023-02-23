@@ -30,25 +30,4 @@ self.getEthPriceInUSD = async function () {
   }
 }
 
-self.getTokenPriceInUSD = async function (tokenSymbol) {
-  try {
-    const response = await axios.get(
-      'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
-      {
-        params: {
-          symbol: tokenSymbol,
-          convert: 'USD',
-        },
-        headers: {
-          'X-CMC_Pro_API_Key': process.env.COINMARKETCAP,
-        },
-      },
-    )
-    const price = response.data.data[tokenSymbol].quote.USD.price
-    return price
-  } catch (e) {
-    console.log(e)
-  }
-}
-
 module.exports = self

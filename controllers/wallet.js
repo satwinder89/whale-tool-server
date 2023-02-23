@@ -1,4 +1,6 @@
 const walletModel = require('../database/models/wallets')
+const tokensModel = require('../database/models/tokens')
+const blockchainModel = require('../database/models/blockchain')
 const jwt = require('jsonwebtoken')
 
 module.exports = {
@@ -26,7 +28,7 @@ module.exports = {
 
       const str = lastWhale[0].name
       const parts = str.split('#')
-      const name = "WHALE #" + (parseInt(parts[1]) +1)
+      const name = 'WHALE #' + (parseInt(parts[1]) + 1)
       let wallet = await walletModel.create({
         address: address.toLowerCase(),
         name: name,
@@ -95,14 +97,32 @@ module.exports = {
           message: 'address must be a string',
         })
       }
-      const wallet = await walletModel.findOne({ address: address }).lean()
+      const ethereum = await blockchainModel.findOne({ name: 'Ethereum'}).lean()
+      var wallet = await walletModel
+        .findOne({ address: address })
+        .lean()
+      const contractAddresses = wallet.tokens.map(
+        (token) => token.contractAddress,
+      )
+      const walletTokenPrices = await tokensModel
+        .find({ address: { $in: contractAddresses } })
+        .lean()
+      for(var i =0; i < wallet.tokens.length; i++){
+        const targetTokenPrice = walletTokenPrices.find(token => token.address === wallet.tokens[i].contractAddress);
+        wallet.tokens[i].tokenBalance = wallet.tokens[i].tokenBalance / Math.pow(10, targetTokenPrice.decimals)
+        wallet.tokens[i].name = targetTokenPrice.name
+        wallet.tokens[i].logo = targetTokenPrice.logo
+        wallet.tokens[i].price = targetTokenPrice.price
+        wallet.tokens[i].symbol = targetTokenPrice.symbol
+        wallet.tokens[i].decimals = targetTokenPrice.decimals
+      }
       if (!wallet) {
         res.status(200).json({
           message: 'address not exist',
         })
         return
       }
-      res.status(200).json(wallet)
+      res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD})
       return
     } catch (e) {
       console.log(e)

@@ -9,7 +9,6 @@ const blockchainsConfig = {
     },
     updatedBlocks: {
         type: Number,
-        required: true
     }
 }
 

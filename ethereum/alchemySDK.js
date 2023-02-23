@@ -53,7 +53,7 @@ self.updateWallet = async function () {
       let tokensDB = await tokensModel
         .find({
           address: { $in: contractAddresses },
-          symbol: { $ne: 'UNI-V2' },
+          // symbol: { $ne: 'UNI-V2' },
         })
         .lean()
       const tokensDBAddress = tokensDB.map((obj) => obj.address)
@@ -66,38 +66,12 @@ self.updateWallet = async function () {
           !tokensDBAddress.includes(stringa),
       )
       await self.createTokens(newTokens)
-      for (let token of nonZeroBalances) {
-        // let balance = token.tokenBalance
-        // let metadata = null
-        // try {
-        //   metadata = await alchemy.core.getTokenMetadata(token.contractAddress)
-        // } catch (e) {
-        //   console.log(e)
-        //   continue
-        // }
-
-        // let tokenInETH = await uniswap.getTokenPrice(
-        //   token.contractAddress,
-        //   metadata.symbol,
-        // )
-        // balance = balance / Math.pow(10, metadata.decimals)
-        // balance = balance.toFixed(10)
-        tokens.push({
-          address: token.contractAddress,
-          // name: metadata.name,
-          // symbol: metadata.symbol,
-          balance: token.tokenBalance,
-          // decimal: metadata.decimals,
-          // logo: metadata.logo,
-          // inETH: tokenInETH,
-        })
-      }
       await walletsModel.findOneAndUpdate(
         { address: wallets[i].address },
         {
           updated: true,
           updateDate: Date.now(),
-          $set: { ETH: eth, tokens: tokens },
+          $set: { ETH: eth, tokens: nonZeroBalances },
         },
         { upsert: true, new: true },
       )
@@ -175,8 +149,8 @@ self.updateTokensPrice = async function () {
 
 self.checkTxList = async function () {
   try {
-    let wallets = await walletsModel.find()
-    const walletsArray = wallets.map((wallet) => wallet.address.toLowerCase())
+    let wallets = await walletsModel.find().lean()
+    const walletsArray = wallets.map((wallet) => wallet.address)
     const blocksTransactions = await blockTransactionsModel.find()
     console.log('New block transactions: ' + blocksTransactions.length)
     const filteredTransactions = blocksTransactions
@@ -220,11 +194,13 @@ self.checkTxList = async function () {
     let set = new Set(walletsToUpdate)
     let uniqueArray = Array.from(set)
     console.log('Aggiornamento di wallets N°: ' + uniqueArray.length)
-    await walletsModel.updateMany(
-      { address: { $in: uniqueArray } },
-      { $set: { updated: false } },
-      { upsert: true, new: true },
-    )
+    if (uniqueArray.length > 0) {
+      await walletsModel.updateMany(
+        { address: { $in: uniqueArray } },
+        { $set: { updated: false, updateDate: Date.now() } },
+        { upsert: true, new: true },
+      )
+    }
     // for (let i = 0; i < uniqueArray.length; i++) {
     //   await self.updateWallet(uniqueArray[i])
     // }

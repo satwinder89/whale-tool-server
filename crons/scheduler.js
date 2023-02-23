@@ -7,13 +7,6 @@ const blockchainModel = require('../database/models/blockchain')
 
 var self = {}
 
-self.syncTransactions = function () {
-  schedule.scheduleJob('*/30 * * * *', async function () {
-    await addressBalances.updateWallet()
-    await addressBalances.updateTokensPrice()
-  })
-}
-
 self.checkTransactions = function () {
   schedule.scheduleJob('*/1 * * * *', async function () {
     await addressBalances.checkTxList()
@@ -26,12 +19,20 @@ self.updateEthToUSDPrice = function () {
       let ethPrice = await coinmarketcap.getEthPriceInUSD()
       await blockchainModel.updateOne(
         { name: 'Ethereum' },
-        { $set: { priceUSD: ethPrice } }
+        { $set: { name: 'Ethereum', priceUSD: ethPrice } },
+        { upsert: true, new: true },
       )
     })
   } catch (e) {
     console.log(e)
   }
+}
+
+self.syncUpdatePrice = function () {
+  schedule.scheduleJob('*/10 * * * *', async function () {
+    await addressBalances.updateWallet()
+    await addressBalances.updateTokensPrice()
+  })
 }
 
 self.deleteOldTransactions = function () {

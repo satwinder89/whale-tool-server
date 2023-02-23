@@ -16,9 +16,9 @@ var self = {}
 
 self.getTokenPrice = async function (tokenAddress, symbol) {
   try {
-    if (/^UNI.+/.test(symbol)) {
-        tokenAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'.toLowerCase()
-    }
+    // if (/^UNI.+/.test(symbol)) {
+    //     tokenAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'.toLowerCase()
+    // }
     for (let currency in address) {
       console.log(`${currency}: ${symbol}: ${tokenAddress}`)
       try {
@@ -44,7 +44,7 @@ self.getTokenPrice = async function (tokenAddress, symbol) {
             value: tokenPrice
         }
       } catch (e) {
-        console.log(e)
+        console.log("Error: Returned error: execution reverted")
         continue
       }
     }
