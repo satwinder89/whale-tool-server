@@ -107,6 +107,12 @@ module.exports = {
       const walletTokenPrices = await tokensModel
         .find({ address: { $in: contractAddresses } })
         .lean()
+      if(!walletTokenPrices) {
+        res.status(403).json({
+          message: 'No token price found',
+        })
+        return
+      }
       for(var i =0; i < wallet.tokens.length; i++){
         const targetTokenPrice = walletTokenPrices.find(token => token.address === wallet.tokens[i].contractAddress);
         wallet.tokens[i].tokenBalance = wallet.tokens[i].tokenBalance / Math.pow(10, targetTokenPrice.decimals)
