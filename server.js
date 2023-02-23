@@ -7,17 +7,15 @@ const database = require('./database/connectDB')
 const bodyParser = require('body-parser')
 const scheduler = require('./crons/scheduler')
 const routes = require('./routes/routes')()
-
-const test = require('./ethereum/test')
 const ethereum = require('./ethereum/alchemySDK')
-app.use(cors())
-
-//Swagger
 const swaggerUi = require('swagger-ui-express')
 const swaggerJsdoc = require('swagger-jsdoc')
 const options = require('./swagger')
 const swaggerSpec = swaggerJsdoc(options)
+app.use(cors())
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+const alchemySDK = require('./ethereum/alchemySDK')
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -32,10 +30,11 @@ app.use('/api', routes)
 const runMain = async () => {
   try {
     await database.connectDB()
-    await ethereum.blockNumber()
-    scheduler.updateEthToUSDPrice()
-    scheduler.checkTransactions()
-    scheduler.deleteOldTransactions()
+    await alchemySDK.updateWallet()
+    // await ethereum.blockNumber()
+    // scheduler.updateEthToUSDPrice()
+    // scheduler.checkTransactions()
+    // scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {
     console.log(error)

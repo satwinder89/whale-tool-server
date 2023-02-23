@@ -14,7 +14,7 @@ self.syncTransactions = function () {
 }
 
 self.checkTransactions = function () {
-  schedule.scheduleJob('*/2 * * * *', async function () {
+  schedule.scheduleJob('*/1 * * * *', async function () {
     await addressBalances.checkTxList()
   })
 }
