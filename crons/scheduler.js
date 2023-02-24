@@ -8,7 +8,7 @@ const blockchainModel = require('../database/models/blockchain')
 var self = {}
 
 self.checkTransactions = function () {
-  schedule.scheduleJob('*/1 * * * *', async function () {
+  schedule.scheduleJob('*/3 * * * *', async function () {
     await addressBalances.checkTxList()
   })
 }
