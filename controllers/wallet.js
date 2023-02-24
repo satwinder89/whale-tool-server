@@ -93,13 +93,19 @@ module.exports = {
     try {
       const { address } = req.params
       if (!(typeof address === 'string')) {
-        res.status(402).json({
+        res.status(200).json({
           message: 'address must be a string',
         })
       }
-      const ethereum = await blockchainModel.findOne({ name: 'Ethereum'}).lean()
-      var wallet = await walletModel
-        .findOne({ address: address })
+      var wallet = await walletModel.findOne({ address: address }).lean()
+      if (!wallet) {
+        res.status(200).json({
+          message: 'address not exist',
+        })
+        return
+      }
+      const ethereum = await blockchainModel
+        .findOne({ name: 'Ethereum' })
         .lean()
       const contractAddresses = wallet.tokens.map(
         (token) => token.contractAddress,
@@ -107,28 +113,26 @@ module.exports = {
       const walletTokenPrices = await tokensModel
         .find({ address: { $in: contractAddresses } })
         .lean()
-      if(walletTokenPrices.length == 0) {
-        res.status(403).json({
+      if (walletTokenPrices.length == 0) {
+        res.status(200).json({
           message: 'No token price found',
         })
         return
       }
-      for(var i =0; i < wallet.tokens.length; i++){
-        const targetTokenPrice = walletTokenPrices.find(token => token.address === wallet.tokens[i].contractAddress);
-        wallet.tokens[i].tokenBalance = wallet.tokens[i].tokenBalance / Math.pow(10, targetTokenPrice.decimals)
+      for (var i = 0; i < wallet.tokens.length; i++) {
+        const targetTokenPrice = walletTokenPrices.find(
+          (token) => token.address === wallet.tokens[i].contractAddress,
+        )
+        wallet.tokens[i].tokenBalance =
+          wallet.tokens[i].tokenBalance /
+          Math.pow(10, targetTokenPrice.decimals)
         wallet.tokens[i].name = targetTokenPrice.name
         wallet.tokens[i].logo = targetTokenPrice.logo
         wallet.tokens[i].price = targetTokenPrice.price
         wallet.tokens[i].symbol = targetTokenPrice.symbol
         wallet.tokens[i].decimals = targetTokenPrice.decimals
       }
-      if (!wallet) {
-        res.status(200).json({
-          message: 'address not exist',
-        })
-        return
-      }
-      res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD})
+      res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD })
       return
     } catch (e) {
       console.log(e)

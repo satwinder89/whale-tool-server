@@ -117,7 +117,7 @@ self.updateTokensPrice = async function () {
   try {
     const tokensDB = await tokensModel.find().lean()
     var tokens = []
-    for (var i = 0; i < tokens.length; i++) {
+    for (var i = 0; i < tokensDB.length; i++) {
       try {
         const metadata = await alchemy.core.getTokenMetadata(
           tokensDB[i].address,
