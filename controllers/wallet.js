@@ -107,6 +107,12 @@ module.exports = {
       const ethereum = await blockchainModel
         .findOne({ name: 'Ethereum' })
         .lean()
+      if(!wallet.token){
+        res.status(200).json({
+          message: 'Token del wallet non aggiornati',
+        })
+        return
+      }
       const contractAddresses = wallet.tokens.map(
         (token) => token.contractAddress,
       )
