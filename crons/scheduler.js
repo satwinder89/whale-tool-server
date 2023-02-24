@@ -31,7 +31,7 @@ self.updateEthToUSDPrice = function () {
 self.syncUpdatePrice = function () {
   schedule.scheduleJob('*/10 * * * *', async function () {
     await addressBalances.updateWallet()
-    await addressBalances.updateTokensPrice()
+    // await addressBalances.updateTokensPrice()
   })
 }
 
