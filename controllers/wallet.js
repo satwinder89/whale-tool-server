@@ -109,6 +109,7 @@ module.exports = {
         .lean()
       if(!wallet.token){
         res.status(200).json({
+          wallet: wallet,
           message: 'Token del wallet non aggiornati',
         })
         return
