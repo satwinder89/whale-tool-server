@@ -17,6 +17,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 const alchemySDK = require('./ethereum/alchemySDK')
 const walletsController = require('./controllers/wallet')
+const uniswap = require('./ethereum/uniswap')
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -31,15 +32,19 @@ app.use('/api', routes)
 const runMain = async () => {
   try {
     await database.connectDB()
-    // await alchemySDK.updateWallet()
+    // // await alchemySDK.updateWallet()
+    // let start = Date.now()
     // await alchemySDK.updateTokensPrice()
-    // await alchemySDK.checkTxList()
-    // await walletsController.getWallet()
+    // let end = Date.now()
+    // console.log(end - start)
+    // // await alchemySDK.checkTxList()
+    // // await walletsController.getWallet()
 
     await ethereum.blockNumber()
     scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.syncUpdatePrice()
+    scheduler.syncTokenPrice()
     scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {

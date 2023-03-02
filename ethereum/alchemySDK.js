@@ -3,10 +3,8 @@ const { Alchemy, Network, AlchemySubscription } = require('alchemy-sdk')
 require('dotenv').config()
 const walletsModel = require('../database/models/wallets')
 const transactionsModel = require('../database/models/transactions')
-const blockchainsModel = require('../database/models/blockchain')
 const blockTransactionsModel = require('../database/models/blockTransactions')
 const tokensModel = require('../database/models/tokens')
-const coinmarketcap = require('../coinmarketcap/price')
 const uniswap = require('./uniswap')
 
 const config = {
@@ -160,9 +158,11 @@ self.checkTxList = async function () {
           (from && walletsArray.includes(from.toLowerCase())) ||
           (to && walletsArray.includes(to.toLowerCase())),
       )
+    //Delete elaborated blocks
     await blockTransactionsModel.deleteMany({
       _id: { $in: blocksTransactions.map((x) => x._id) },
     })
+
     let walletsToUpdate = []
     if (filteredTransactions.length > 0) {
       for (var i = 0; i < filteredTransactions.length; i++) {

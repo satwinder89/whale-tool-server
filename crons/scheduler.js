@@ -1,9 +1,8 @@
 const schedule = require('node-schedule')
 const addressBalances = require('../ethereum/alchemySDK')
-const blockTransactionModel = require('../database/models/blockTransactions')
 const transactionsModel = require('../database/models/transactions')
-const coinmarketcap = require('../coinmarketcap/price')
 const blockchainModel = require('../database/models/blockchain')
+const uniswap = require('../ethereum/uniswap')
 
 var self = {}
 
@@ -14,24 +13,33 @@ self.checkTransactions = function () {
 }
 
 self.updateEthToUSDPrice = function () {
-  try {
-    schedule.scheduleJob('*/5 * * * *', async function () {
-      let ethPrice = await coinmarketcap.getEthPriceInUSD()
+  schedule.scheduleJob('*/5 * * * *', async function () {
+    try {
+      const ethPrice = await uniswap.getTokenPrice("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "WETH")
       await blockchainModel.updateOne(
         { name: 'Ethereum' },
         { $set: { name: 'Ethereum', priceUSD: ethPrice } },
         { upsert: true, new: true },
       )
-    })
-  } catch (e) {
-    console.log(e)
-  }
+    } catch (e) {
+      console.log(e)
+    }
+  })
 }
 
 self.syncUpdatePrice = function () {
   schedule.scheduleJob('*/10 * * * *', async function () {
     await addressBalances.updateWallet()
-    // await addressBalances.updateTokensPrice()
+  })
+}
+
+self.syncTokenPrice = function () {
+  schedule.scheduleJob('*/30 * * * *', async function () {
+    try {
+      await addressBalances.updateTokensPrice()
+    }catch(e){
+      console.log(e)
+    }
   })
 }
 
