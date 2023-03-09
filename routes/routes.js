@@ -175,7 +175,7 @@ module.exports = () => {
    * @swagger
    * /wallets/holding:
    *   get:
-   *     summary: ritorna la lista dal più detenuto al meno detenuto
+   *     summary: ritorna la lista dal token più detenuto
    *     security:
    *        - bearerAuth: []
    *     responses:
