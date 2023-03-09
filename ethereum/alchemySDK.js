@@ -33,6 +33,7 @@ self.blockNumber = async function () {
 
 self.updateWallet = async function () {
   try {
+    // await walletsModel.updateMany({ tokens: { $exists: true } }, {$unset: {tokens: 1}, updated: false})
     let wallets = await walletsModel.find({ updated: false }).lean()
     for (let i = 0; i < wallets.length; i++) {
       let ethBalance = await alchemy.core.getBalance(
@@ -64,12 +65,17 @@ self.updateWallet = async function () {
           !tokensDBAddress.includes(stringa),
       )
       await self.createTokens(newTokens)
+      const userTokens = {
+        tokens: nonZeroBalances,
+        date: Date.now()
+      }
       await walletsModel.findOneAndUpdate(
         { address: wallets[i].address },
         {
           updated: true,
           updateDate: Date.now(),
-          $set: { ETH: eth, tokens: nonZeroBalances },
+          $set: { ETH: eth },
+          $push: { tokens: userTokens }
         },
         { upsert: true, new: true },
       )
@@ -120,12 +126,14 @@ self.updateTokensPrice = async function () {
         const metadata = await alchemy.core.getTokenMetadata(
           tokensDB[i].address,
         )
+        const totalSupply = await uniswap.getTotalSupply(tokensDB[i].address)
         let tokenPrice = await uniswap.getTokenPrice(
           tokensDB[i].address,
           metadata.symbol,
         )
         tokens.push({
           address: tokensDB[i].address,
+          totalSupply: totalSupply,
           name: metadata.name,
           symbol: metadata.symbol,
           decimals: metadata.decimals,
@@ -244,6 +252,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
               sendedTx.transfers[j].asset = metadata.name
               let resultObject = {
                 uniqueId: sendedTx.transfers[j].uniqueId,
+                blockNum: blockNumber,
                 type: 'sended',
                 address: sendedTx.transfers[j].rawContract.address,
                 category: sendedTx.transfers[j].category,
@@ -283,6 +292,7 @@ self.getSenderTransactions = async function (from, blockNumber) {
           }
           let resultObject = {
             uniqueId: sendedTx.transfers[j].uniqueId,
+            blockNum: blockNumber,
             type: 'sended',
             address: sendedTx.transfers[j]?.rawContract.address,
             category: sendedTx.transfers[j].category,
@@ -356,6 +366,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
               recevedTx.transfers[j].asset = metadata.name
               let resultObject = {
                 uniqueId: recevedTx.transfers[j].uniqueId,
+                blockNum: blockNumber,
                 type: 'receved',
                 address: recevedTx.transfers[j].rawContract.address,
                 category: recevedTx.transfers[j].category,
@@ -395,6 +406,7 @@ self.getReceverTransactions = async function (to, blockNumber) {
           }
           let resultObject = {
             uniqueId: recevedTx.transfers[j].uniqueId,
+            blockNum: blockNumber,
             type: 'receved',
             address: recevedTx.transfers[j]?.rawContract.address,
             category: recevedTx.transfers[j].category,

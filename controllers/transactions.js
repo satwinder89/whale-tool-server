@@ -1,6 +1,5 @@
 const transactionsModel = require('../database/models/transactions')
 const blockchainModel = require('../database/models/blockchain')
-const { count } = require('../database/models/wallets')
 
 module.exports = {
   getSwaps: async (req, res) => {
@@ -165,9 +164,9 @@ module.exports = {
         },
       })
       const countTransactions = await transactionsModel.aggregate(pipeline)
-      if(countTransactions.length == 0) {
+      if (countTransactions.length == 0) {
         res.status(404).json({
-          message: "No transactions found!"
+          message: 'No transactions found!',
         })
         return
       }
@@ -339,7 +338,6 @@ module.exports = {
             categories: 1,
             timestamp: 1,
             mint: 1,
-            tokenId: 1,
           },
         },
         {
@@ -354,10 +352,18 @@ module.exports = {
           count: { $sum: 1 },
         },
       })
-      const countTransactions = await transactionsModel.aggregate(pipeline)
-      if(countTransactions.length == 0) {
+      const countTransactionsSwaps = await transactionsModel.aggregate(pipeline)
+      // const countNftMint = await transactionsModel
+      //   .find({
+      //     from: '0x0000000000000000000000000000000000000000',
+      //     category: { $in: ['erc721', 'erc1155', 'specialnft'] },
+      //     type: 'receved',
+      //   })
+      //   .sort({ date: -1 })
+      //   .countDocuments()
+      if (countTransactionsSwaps.length == 0) {
         res.status(404).json({
-          message: "No transactions found!"
+          message: 'No transactions found!',
         })
         return
       }
@@ -370,13 +376,22 @@ module.exports = {
           $limit: 32,
         },
       )
-      const transactions = await transactionsModel.aggregate(pipeline)
+      const transactionsSwaps = await transactionsModel.aggregate(pipeline)
+      // const nftMints = await transactionsModel
+      //   .find({
+      //     from: '0x0000000000000000000000000000000000000000',
+      //     category: { $in: ['erc721', 'erc1155', 'specialnft'] },
+      //     type: 'receved',
+      //   })
+      //   .sort({ date: -1 })
+      //   .limit(32 - countTransactionsSwaps.length)
+      //   .lean()
 
       let endTime = Date.now() - startTime
       console.log('ended: ' + endTime)
       res.status(200).json({
-        swaps: transactions,
-        totSwaps: countTransactions[0].count,
+        swaps: transactionsSwaps,
+        totSwaps: countTransactionsSwaps[0].count,
       })
       return
     } catch (e) {

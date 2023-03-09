@@ -32,13 +32,14 @@ app.use('/api', routes)
 const runMain = async () => {
   try {
     await database.connectDB()
-    // // await alchemySDK.updateWallet()
+    // await alchemySDK.updateWallet()
     // let start = Date.now()
     // await alchemySDK.updateTokensPrice()
     // let end = Date.now()
     // console.log(end - start)
     // // await alchemySDK.checkTxList()
-    // // await walletsController.getWallet()
+    // await walletsController.getWalletHolding()
+
 
     await ethereum.blockNumber()
     scheduler.updateEthToUSDPrice()

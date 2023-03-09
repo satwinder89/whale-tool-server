@@ -170,5 +170,22 @@ module.exports = () => {
     tokenMiddleware.verifyToken,
     transactionsController.getNFTs,
   )
+
+  /**
+   * @swagger
+   * /wallets/holding:
+   *   get:
+   *     summary: ritorna la lista dal più detenuto al meno detenuto
+   *     security:
+   *        - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: lista ritornata con successo
+   */
+  router.get(
+    '/wallets/holding',
+    tokenMiddleware.verifyToken,
+    walletsController.getWalletHolding,
+  )
   return router
 }

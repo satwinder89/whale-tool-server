@@ -22,36 +22,64 @@ self.getTokenPrice = async function (tokenAddress, symbol) {
     for (let currency in address) {
       console.log(`${currency}: ${symbol}: ${tokenAddress}`)
       try {
+        const pools = await uniswapContract.methods.getPairs(tokenAddress).call();
         let tokenPrice = await uniswapContract.methods
-          .getAmountsOut(web3.utils.toWei('1'), [tokenAddress, address[currency]])
+          .getAmountsOut(web3.utils.toWei('1'), [
+            tokenAddress,
+            address[currency],
+          ])
           .call()
-        switch(currency) {
-            case 'ETH':
-                tokenPrice = Number(web3.utils.fromWei(tokenPrice[1], 'ether'))
-                break;
-            case 'USDT':
-                tokenPrice = tokenPrice[1] / 1000000
-                break;
-            case 'USDC':
-                tokenPrice = tokenPrice[1] / 1000000
-                break;
-            case 'DAI':
-                tokenPrice = tokenPrice[1] / 1000000000000000000
-                break;
+        switch (currency) {
+          case 'ETH':
+            tokenPrice = Number(web3.utils.fromWei(tokenPrice[1], 'ether'))
+            let testPrice = Number(tokenPrice[1])/Number(tokenPrice[0])
+            break
+          case 'USDT':
+            tokenPrice = tokenPrice[1] / 1000000
+            break
+          case 'USDC':
+            tokenPrice = tokenPrice[1] / 1000000
+            break
+          case 'DAI':
+            tokenPrice = tokenPrice[1] / 1000000000000000000
+            break
         }
         return {
-            pair: currency + '-' + symbol,
-            value: tokenPrice
+          pair: currency + '-' + symbol,
+          value: tokenPrice,
         }
       } catch (e) {
-        console.log("Error: Returned error: execution reverted")
+        console.log('Error: Returned error: execution reverted')
         continue
       }
     }
     return {
-      pair: "No Pair found",
-      value: null
+      pair: 'No Pair found',
+      value: null,
     }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+self.getTotalSupply = async function (tokenAddress) {
+  try {
+    // Definisce l'ABI (Application Binary Interface) del token
+    const tokenABI = [
+      {
+        constant: true,
+        inputs: [],
+        name: 'totalSupply',
+        outputs: [{ name: '', type: 'uint256' }],
+        payable: false,
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ]
+    // Crea un'istanza del contratto del token utilizzando l'indirizzo e l'ABI
+    const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress)
+    const totalSupply = await tokenContract.methods.totalSupply().call()
+    return totalSupply
   } catch (e) {
     console.log(e)
   }

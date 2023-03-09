@@ -107,37 +107,146 @@ module.exports = {
       const ethereum = await blockchainModel
         .findOne({ name: 'Ethereum' })
         .lean()
-      if(!wallet.token){
+      if (!wallet.tokens) {
         res.status(200).json({
           wallet: wallet,
           message: 'Token del wallet non aggiornati',
         })
         return
       }
-      const contractAddresses = wallet.tokens.map(
-        (token) => token.contractAddress,
-      )
-      const walletTokenPrices = await tokensModel
-        .find({ address: { $in: contractAddresses } })
-        .lean()
-      if (walletTokenPrices.length == 0) {
-        res.status(200).json({
-          message: 'No token price found',
-        })
-        return
-      }
+      // wallet.tokens[wallet.tokens.length - 1].tokens
       for (var i = 0; i < wallet.tokens.length; i++) {
-        const targetTokenPrice = walletTokenPrices.find(
-          (token) => token.address === wallet.tokens[i].contractAddress,
+        const contractAddresses = wallet.tokens[i].tokens.map(
+          (token) => token.contractAddress,
         )
-        wallet.tokens[i].tokenBalance =
-          wallet.tokens[i].tokenBalance /
-          Math.pow(10, targetTokenPrice.decimals)
-        wallet.tokens[i].name = targetTokenPrice.name
-        wallet.tokens[i].logo = targetTokenPrice.logo
-        wallet.tokens[i].price = targetTokenPrice.price
-        wallet.tokens[i].symbol = targetTokenPrice.symbol
-        wallet.tokens[i].decimals = targetTokenPrice.decimals
+        const walletTokenPrices = await tokensModel
+          .find({ address: { $in: contractAddresses } })
+          .lean()
+        if (walletTokenPrices.length == 0) {
+          res.status(200).json({
+            message: 'No token price found',
+          })
+          return
+        }
+        for (var j = 0; j < wallet.tokens[i].tokens.length; j++) {
+          const targetTokenPrice = walletTokenPrices.find(
+            (token) =>
+              token.address === wallet.tokens[i].tokens[j].contractAddress,
+          )
+          wallet.tokens[i].tokens[j].tokenBalance =
+            wallet.tokens[i].tokens[j].tokenBalance /
+            Math.pow(10, targetTokenPrice.decimals)
+          wallet.tokens[i].tokens[j].name = targetTokenPrice.name
+          wallet.tokens[i].tokens[j].logo = targetTokenPrice.logo
+          wallet.tokens[i].tokens[j].price = targetTokenPrice.price
+          wallet.tokens[i].tokens[j].symbol = targetTokenPrice.symbol
+          wallet.tokens[i].tokens[j].decimals = targetTokenPrice.decimals
+        }
+      }
+      res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD })
+      return
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  getWalletHolding: async (req, res) => {
+    try {
+      // const tokens = await tokensModel.find().lean()
+      var wallet = await walletModel.find({ tokens: { $exists: true } }).lean()
+      var tokenBalances = []
+
+      for (var z = 0; z < wallet.length; z++) {
+        const contractAddresses = wallet[z].tokens[
+          wallet[z].tokens.length - 1
+        ].tokens.map((token) => token.contractAddress)
+        const walletTokenPrices = await tokensModel
+          .find({ address: { $in: contractAddresses } })
+          .lean()
+        if (walletTokenPrices.length == 0) {
+          res.status(200).json({
+            message: 'No token price found',
+          })
+          return
+        }
+        //wallet[z].tokens.length - 1
+        for (
+          var j = 0;
+          j < wallet[z].tokens[wallet[z].tokens.length - 1].tokens.length;
+          j++
+        ) {
+          const targetTokenPrice = walletTokenPrices.find(
+            (token) =>
+              token.address ===
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+                .contractAddress,
+          )
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].tokenBalance =
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+              .tokenBalance / Math.pow(10, targetTokenPrice.decimals)
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].name =
+            targetTokenPrice.name
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].logo =
+            targetTokenPrice.logo
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price =
+            targetTokenPrice.price
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol =
+            targetTokenPrice.symbol
+          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].decimals =
+            targetTokenPrice.decimals
+
+          const value =
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price.value
+          const tokenBalance =
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].tokenBalance
+          const symbol = wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol
+          const pair = wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price.pair
+
+          if(value == 0 || tokenBalance == 0 || symbol == ''){
+            continue
+          }
+          //prima della somma inserire il check sui PAIR
+          const newObject = {
+            address:
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+                .contractAddress,
+            value: value * tokenBalance,
+            pair: pair,
+            holders: [
+              {
+                wallet: wallet[z].address,
+                name: wallet[z].name,
+                value: value,
+                tokenBalance: tokenBalance
+              }
+            ]
+          }
+          // if(newObject.address == "0x0b452278223d3954f4ac050949d7998e373e7e43"){
+          //   console.log("STOP")
+          // }
+
+          let exists = false
+          for (let i = 0; i < tokenBalances.length; i++) {
+            if (tokenBalances[i].address === newObject.address) {
+              tokenBalances[i].value = tokenBalances[i].value + newObject.value
+              tokenBalances[i].holders.push({
+                wallet: wallet[z].address,
+                name: wallet[z].name,
+                value: value,
+                tokenBalance: tokenBalance
+              })
+              exists = true
+              break
+            }
+          }
+          // Se non esiste già un oggetto con lo stesso indirizzo, aggiungere il nuovo oggetto all'array
+          if (!exists) {
+            tokenBalances.push(newObject)
+          }
+          tokenValue = tokenBalance * value
+          console.log('e')
+        }
+        tokenBalances.sort((a, b) => b.value - a.value);
+        console.log('test')
       }
       res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD })
       return
@@ -146,3 +255,4 @@ module.exports = {
     }
   },
 }
+
