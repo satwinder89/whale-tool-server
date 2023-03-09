@@ -173,7 +173,7 @@ module.exports = () => {
 
   /**
    * @swagger
-   * /wallets/holding:
+   * /token/holding:
    *   get:
    *     summary: ritorna la lista dal token più detenuto
    *     security:
@@ -183,7 +183,7 @@ module.exports = () => {
    *         description: lista ritornata con successo
    */
   router.get(
-    '/wallets/holding',
+    '/token/holding',
     tokenMiddleware.verifyToken,
     walletsController.getWalletHolding,
   )

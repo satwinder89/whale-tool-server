@@ -174,85 +174,95 @@ module.exports = {
           j < wallet[z].tokens[wallet[z].tokens.length - 1].tokens.length;
           j++
         ) {
-          const targetTokenPrice = walletTokenPrices.find(
-            (token) =>
-              token.address ===
+          try {
+            const targetTokenPrice = walletTokenPrices.find(
+              (token) =>
+                token.address ===
+                wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+                  .contractAddress,
+            )
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[
+              j
+            ].tokenBalance =
               wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
-                .contractAddress,
-          )
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].tokenBalance =
-            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
-              .tokenBalance / Math.pow(10, targetTokenPrice.decimals)
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].name =
-            targetTokenPrice.name
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].logo =
-            targetTokenPrice.logo
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price =
-            targetTokenPrice.price
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol =
-            targetTokenPrice.symbol
-          wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].decimals =
-            targetTokenPrice.decimals
+                .tokenBalance / Math.pow(10, targetTokenPrice.decimals)
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].name =
+              targetTokenPrice.name
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].logo =
+              targetTokenPrice.logo
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price =
+              targetTokenPrice.price
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol =
+              targetTokenPrice.symbol
+            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].decimals =
+              targetTokenPrice.decimals
 
-          const value =
-            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price.value
-          const tokenBalance =
-            wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].tokenBalance
-          const symbol = wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol
-          const pair = wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price.pair
+            const value =
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price
+                .value
+            const tokenBalance =
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+                .tokenBalance
+            const symbol =
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].symbol
+            const pair =
+              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j].price.pair
 
-          if(value == 0 || tokenBalance == 0 || symbol == ''){
+            if (value == 0 || tokenBalance == 0 || symbol == '') {
+              continue
+            }
+            //prima della somma inserire il check sui PAIR
+            const newObject = {
+              address:
+                wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
+                  .contractAddress,
+              value: value * tokenBalance,
+              pair: pair,
+              holders: [
+                {
+                  wallet: wallet[z].address,
+                  name: wallet[z].name,
+                  value: value,
+                  tokenBalance: tokenBalance,
+                },
+              ],
+            }
+            // if(newObject.address == "0x0b452278223d3954f4ac050949d7998e373e7e43"){
+            //   console.log("STOP")
+            // }
+
+            let exists = false
+            for (let i = 0; i < tokenBalances.length; i++) {
+              if (tokenBalances[i].address === newObject.address) {
+                tokenBalances[i].value =
+                  tokenBalances[i].value + newObject.value
+                tokenBalances[i].holders.push({
+                  wallet: wallet[z].address,
+                  name: wallet[z].name,
+                  value: value,
+                  tokenBalance: tokenBalance,
+                })
+                exists = true
+                break
+              }
+            }
+            // Se non esiste già un oggetto con lo stesso indirizzo, aggiungere il nuovo oggetto all'array
+            if (!exists) {
+              tokenBalances.push(newObject)
+            }
+            tokenValue = tokenBalance * value
+            console.log('e')
+          } catch (e) {
             continue
           }
-          //prima della somma inserire il check sui PAIR
-          const newObject = {
-            address:
-              wallet[z].tokens[wallet[z].tokens.length - 1].tokens[j]
-                .contractAddress,
-            value: value * tokenBalance,
-            pair: pair,
-            holders: [
-              {
-                wallet: wallet[z].address,
-                name: wallet[z].name,
-                value: value,
-                tokenBalance: tokenBalance
-              }
-            ]
-          }
-          // if(newObject.address == "0x0b452278223d3954f4ac050949d7998e373e7e43"){
-          //   console.log("STOP")
-          // }
-
-          let exists = false
-          for (let i = 0; i < tokenBalances.length; i++) {
-            if (tokenBalances[i].address === newObject.address) {
-              tokenBalances[i].value = tokenBalances[i].value + newObject.value
-              tokenBalances[i].holders.push({
-                wallet: wallet[z].address,
-                name: wallet[z].name,
-                value: value,
-                tokenBalance: tokenBalance
-              })
-              exists = true
-              break
-            }
-          }
-          // Se non esiste già un oggetto con lo stesso indirizzo, aggiungere il nuovo oggetto all'array
-          if (!exists) {
-            tokenBalances.push(newObject)
-          }
-          tokenValue = tokenBalance * value
-          console.log('e')
         }
-        tokenBalances.sort((a, b) => b.value - a.value);
+        tokenBalances.sort((a, b) => b.value - a.value)
         console.log('test')
       }
-      res.status(200).json({ wallet: wallet, ethPrice: ethereum.priceUSD })
+      res.status(200).json({ wallet: tokenBalances })
       return
     } catch (e) {
       console.log(e)
     }
   },
 }
-
