@@ -163,10 +163,11 @@ module.exports = {
           .find({ address: { $in: contractAddresses } })
           .lean()
         if (walletTokenPrices.length == 0) {
-          res.status(200).json({
-            message: 'No token price found',
-          })
-          return
+          continue
+          // res.status(200).json({
+          //   message: 'No token price found',
+          // })
+          // return
         }
         //wallet[z].tokens.length - 1
         for (

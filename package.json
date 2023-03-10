@@ -9,6 +9,7 @@
   "author": "Satwinder Singh",
   "license": "ISC",
   "dependencies": {
+    "@uniswap/sdk": "^3.0.3",
     "alchemy-sdk": "^2.3.0",
     "big-number": "^2.0.0",
     "dotenv": "^16.0.3",

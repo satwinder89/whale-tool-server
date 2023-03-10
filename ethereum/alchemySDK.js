@@ -127,9 +127,10 @@ self.updateTokensPrice = async function () {
           tokensDB[i].address,
         )
         const totalSupply = await uniswap.getTotalSupply(tokensDB[i].address)
-        let tokenPrice = await uniswap.getTokenPrice(
+        let tokenPrice = await uniswap.getTokenPriceV2(
           tokensDB[i].address,
           metadata.symbol,
+          metadata.decimals
         )
         tokens.push({
           address: tokensDB[i].address,

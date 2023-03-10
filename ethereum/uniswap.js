@@ -12,7 +12,42 @@ const address = {
   USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
 }
+
+const {
+  ChainId,
+  Fetcher,
+  Route,
+  Token,
+  TokenAmount,
+  WETH,
+} = require('@uniswap/sdk')
+const { ethers } = require('ethers');
+const provider = new ethers.providers.AlchemyProvider('mainnet', process.env.ALCHEMY_API_KEY);
 var self = {}
+
+self.getTokenPriceV2 = async function (tokenAddress, symbol, decimals) {
+  try {
+    try {
+      const chainId = ChainId.MAINNET
+      const token = new Token(chainId, tokenAddress, decimals)
+      const weth = WETH[chainId]
+      const pair = await Fetcher.fetchPairData(token, weth, provider)
+      const route = new Route([pair], weth)
+      const price = route.midPrice.toSignificant(6) // prezzo del token in ETH
+      return {
+        pair: 'ETH-' + symbol,
+        value: price,
+      }
+    } catch (e) {
+      return {
+        pair: 'No Pair found',
+        value: null,
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 self.getTokenPrice = async function (tokenAddress, symbol) {
   try {
@@ -22,7 +57,9 @@ self.getTokenPrice = async function (tokenAddress, symbol) {
     for (let currency in address) {
       console.log(`${currency}: ${symbol}: ${tokenAddress}`)
       try {
-        const pools = await uniswapContract.methods.getPairs(tokenAddress).call();
+        const pools = await uniswapContract.methods
+          .getPairs(tokenAddress)
+          .call()
         let tokenPrice = await uniswapContract.methods
           .getAmountsOut(web3.utils.toWei('1'), [
             tokenAddress,
@@ -32,7 +69,7 @@ self.getTokenPrice = async function (tokenAddress, symbol) {
         switch (currency) {
           case 'ETH':
             tokenPrice = Number(web3.utils.fromWei(tokenPrice[1], 'ether'))
-            let testPrice = Number(tokenPrice[1])/Number(tokenPrice[0])
+            let testPrice = Number(tokenPrice[1]) / Number(tokenPrice[0])
             break
           case 'USDT':
             tokenPrice = tokenPrice[1] / 1000000
