@@ -211,6 +211,7 @@ module.exports = {
         ltEthPrice = Number(ltValue / ethPrice.priceUSD)
       }
       let startTime = Date.now()
+
       let pipeline = [
         {
           $group: {
@@ -254,42 +255,42 @@ module.exports = {
               { count: { $lte: 3 } },
               { count: { $gt: 1 } },
               { comparisonResult: { $ne: 0 } },
-              {
-                $or: [
-                  {
-                    $and: [
-                      { assetIn: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetIn: { $gt: gtEthPrice } },
-                      ltEthPrice !== 0
-                        ? { valueAssetIn: { $lte: ltEthPrice } }
-                        : {},
-                    ],
-                  },
-                  {
-                    $and: [
-                      { assetOut: { $in: ['ETH', 'WETH'] } },
-                      { valueAssetOut: { $gt: gtEthPrice } },
-                      ltEthPrice !== 0
-                        ? { valueAssetOut: { $lte: ltEthPrice } }
-                        : {},
-                    ],
-                  },
-                  {
-                    $and: [
-                      { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
-                      { valueAssetIn: { $gt: gtValue } },
-                      ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {},
-                    ],
-                  },
-                  {
-                    $and: [
-                      { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
-                      { valueAssetOut: { $gt: gtValue } },
-                      ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {},
-                    ],
-                  },
-                ],
-              },
+              // {
+              //   $or: [
+              //     {
+              //       $and: [
+              //         { assetIn: { $in: ['ETH', 'WETH'] } },
+              //         { valueAssetIn: { $gt: gtEthPrice } },
+              //         ltEthPrice !== 0
+              //           ? { valueAssetIn: { $lte: ltEthPrice } }
+              //           : {},
+              //       ],
+              //     },
+              //     {
+              //       $and: [
+              //         { assetOut: { $in: ['ETH', 'WETH'] } },
+              //         { valueAssetOut: { $gt: gtEthPrice } },
+              //         ltEthPrice !== 0
+              //           ? { valueAssetOut: { $lte: ltEthPrice } }
+              //           : {},
+              //       ],
+              //     },
+              //     {
+              //       $and: [
+              //         { assetIn: { $in: ['USDT', 'USDC', 'DAI'] } },
+              //         { valueAssetIn: { $gt: gtValue } },
+              //         ltValue !== 0 ? { valueAssetIn: { $lte: ltValue } } : {},
+              //       ],
+              //     },
+              //     {
+              //       $and: [
+              //         { assetOut: { $in: ['USDT', 'USDC', 'DAI'] } },
+              //         { valueAssetOut: { $gt: gtValue } },
+              //         ltValue !== 0 ? { valueAssetOut: { $lte: ltValue } } : {},
+              //       ],
+              //     },
+              //   ],
+              // },
             ],
           },
         },
@@ -331,13 +332,13 @@ module.exports = {
             assetIn: 1,
             addressIn: 1,
             assetOut: 1,
-            tokenId: 1,
             addressOut: 1,
             valueAssetIn: { $toDouble: '$valueAssetIn' },
             valueAssetOut: { $toDouble: '$valueAssetOut' },
             categories: 1,
             timestamp: 1,
             mint: 1,
+            tokenId: 1,
           },
         },
         {
