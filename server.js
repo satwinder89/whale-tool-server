@@ -45,7 +45,7 @@ const runMain = async () => {
     scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.syncUpdatePrice()
-    scheduler.syncTokenPrice()
+    // scheduler.syncTokenPrice()
     scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {

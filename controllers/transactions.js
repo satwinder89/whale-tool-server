@@ -354,14 +354,6 @@ module.exports = {
         },
       })
       const countTransactionsSwaps = await transactionsModel.aggregate(pipeline)
-      // const countNftMint = await transactionsModel
-      //   .find({
-      //     from: '0x0000000000000000000000000000000000000000',
-      //     category: { $in: ['erc721', 'erc1155', 'specialnft'] },
-      //     type: 'receved',
-      //   })
-      //   .sort({ date: -1 })
-      //   .countDocuments()
       if (countTransactionsSwaps.length == 0) {
         res.status(404).json({
           message: 'No transactions found!',
@@ -378,15 +370,6 @@ module.exports = {
         },
       )
       const transactionsSwaps = await transactionsModel.aggregate(pipeline)
-      // const nftMints = await transactionsModel
-      //   .find({
-      //     from: '0x0000000000000000000000000000000000000000',
-      //     category: { $in: ['erc721', 'erc1155', 'specialnft'] },
-      //     type: 'receved',
-      //   })
-      //   .sort({ date: -1 })
-      //   .limit(32 - countTransactionsSwaps.length)
-      //   .lean()
 
       let endTime = Date.now() - startTime
       console.log('ended: ' + endTime)
