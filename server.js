@@ -40,12 +40,12 @@ const runMain = async () => {
     // // await alchemySDK.checkTxList()
     // await walletsController.getWalletHolding()
 
-
+    await alchemySDK.checkTxList()
     await ethereum.blockNumber()
     scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.syncUpdatePrice()
-    // scheduler.syncTokenPrice()
+    scheduler.syncTokenPrice()
     scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {

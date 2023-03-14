@@ -156,7 +156,7 @@ self.updateTokensPrice = async function () {
 
 self.checkTxList = async function () {
   try {
-    let wallets = await walletsModel.find().lean()
+    let wallets = await walletsModel.find().select('address').lean()
     const walletsArray = wallets.map((wallet) => wallet.address)
     const blocksTransactions = await blockTransactionsModel.find()
     console.log('New block transactions: ' + blocksTransactions.length)
