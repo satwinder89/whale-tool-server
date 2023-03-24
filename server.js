@@ -40,8 +40,8 @@ const runMain = async () => {
     // // await alchemySDK.checkTxList()
     // await walletsController.getWalletHolding()
 
-    await alchemySDK.checkTxList()
     await ethereum.blockNumber()
+    // await alchemySDK.checkTxList()
     scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.syncUpdatePrice()
