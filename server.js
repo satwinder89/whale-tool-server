@@ -37,7 +37,7 @@ const runMain = async () => {
     // await alchemySDK.updateTokensPrice()
     // let end = Date.now()
     // console.log(end - start)
-    // // await alchemySDK.checkTxList()
+    // await alchemySDK.checkTxList()
     // await walletsController.getWalletHolding()
 
     await ethereum.blockNumber()
@@ -45,7 +45,7 @@ const runMain = async () => {
     scheduler.updateEthToUSDPrice()
     scheduler.checkTransactions()
     scheduler.syncUpdatePrice()
-    scheduler.syncTokenPrice()
+    // scheduler.syncTokenPrice()
     scheduler.deleteOldTransactions()
     console.log('all is ok')
   } catch (error) {
